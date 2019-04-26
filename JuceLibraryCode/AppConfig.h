@@ -45,7 +45,7 @@
 
 // END SECTION A
 
-#define JUCE_USE_DARK_SPLASH_SCREEN 0
+#define JUCE_USE_DARK_SPLASH_SCREEN 1
 
 //==============================================================================
 #define JUCE_MODULE_AVAILABLE_juce_audio_basics             1
@@ -326,10 +326,10 @@
  #define JucePlugin_Enable_IAA             0
 #endif
 #ifndef  JucePlugin_Name
- #define JucePlugin_Name                   "Procrastinator"
+ #define JucePlugin_Name                   "SimpleDelay"
 #endif
 #ifndef  JucePlugin_Desc
- #define JucePlugin_Desc                   "Procrastinator"
+ #define JucePlugin_Desc                   "SimpleDelay"
 #endif
 #ifndef  JucePlugin_Manufacturer
  #define JucePlugin_Manufacturer           "Juni"
@@ -386,10 +386,10 @@
  #define JucePlugin_AUSubType              JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_AUExportPrefix
- #define JucePlugin_AUExportPrefix         ProcrastinatorAU
+ #define JucePlugin_AUExportPrefix         SimpleDelayAU
 #endif
 #ifndef  JucePlugin_AUExportPrefixQuoted
- #define JucePlugin_AUExportPrefixQuoted   "ProcrastinatorAU"
+ #define JucePlugin_AUExportPrefixQuoted   "SimpleDelayAU"
 #endif
 #ifndef  JucePlugin_AUManufacturerCode
  #define JucePlugin_AUManufacturerCode     JucePlugin_ManufacturerCode
@@ -413,7 +413,7 @@
  #define JucePlugin_RTASDisableMultiMono   0
 #endif
 #ifndef  JucePlugin_AAXIdentifier
- #define JucePlugin_AAXIdentifier          com.Juni.Procrastinator
+ #define JucePlugin_AAXIdentifier          com.Juni.SimpleDelay
 #endif
 #ifndef  JucePlugin_AAXManufacturerCode
  #define JucePlugin_AAXManufacturerCode    JucePlugin_ManufacturerCode
@@ -437,7 +437,7 @@
  #define JucePlugin_IAASubType             JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_IAAName
- #define JucePlugin_IAAName                "Juni: Procrastinator"
+ #define JucePlugin_IAAName                "Juni: SimpleDelay"
 #endif
 #ifndef  JucePlugin_VSTNumMidiInputs
  #define JucePlugin_VSTNumMidiInputs       16

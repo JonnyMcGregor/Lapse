@@ -34,7 +34,10 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SimpleDelayAudioProcessor& processor;
+    //Manage parameter state to send to processor
 	AudioProcessorValueTreeState& state;
+	
+	//Visual GUI Components
 	Slider mixSlider;
 	Slider delayTimeSlider;
 	Slider feedbackSlider;
@@ -42,5 +45,6 @@ private:
 	Label mixLabel;
 	Label delayTimeLabel;
 	Label feedbackLabel;
+	
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessorEditor)
 };

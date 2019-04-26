@@ -1,9 +1,10 @@
 /*
   ==============================================================================
 
-    This file was auto-generated!
-
-    It contains the basic framework code for a JUCE plugin processor.
+    This is a delay plugin with mix, feedback, and delay time parameters.
+    
+    The algorithm was sourced from Daniel Walz's Tape Delay Plugin, can be found
+    at "https://github.com/ffAudio/ffTapeDelay/".  
 
   ==============================================================================
 */
@@ -66,23 +67,24 @@ public:
                             const float* bufferData, const float* delayBufferData, int delayTime);
 
     void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                       const float* dryBuffer);
+                       const float* dryBuffer, float oldFeedback, float feedback);
 
-    void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
+	void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
 
 private:
 
-    AudioBuffer<float> mDelayBuffer; //Buffer to hold delayed audio content
-    AudioBuffer<float> mDryBuffer; //Buffer to hold dry content for mix
+    AudioBuffer<float> delayBuffer; //Buffer to hold delayed audio content
+    AudioBuffer<float> dryBuffer; //Buffer to hold dry content for mix
     
-	int mWritePosition { 0 }; //Stores the index position of the delay buffer to manage the overlap when writing to output buffer
-	int mSampleRate  { 44100 };
+	int writePosition { 0 }; //Stores the index position of the delay buffer to manage the overlap when writing to output buffer
+	int mSampleRate  { 44100 };//default sample rate value
 	
 	//Parameters values that correspond to knobs in UI
-	float* mixParameter = 0;
-	float* delayParameter = 0;
-	float* feedbackParameter = 0;
+	float* mixParameter = 0;// dry/wet knob value
+	float* delayParameter = 0;// delay time knob value
+	float* feedbackParameter = 0;// delay feedback knob value
 
+	float oldFeedback = 0;
 	AudioProcessorValueTreeState parameters; //means of connecting dsp params to ui elements
 
 

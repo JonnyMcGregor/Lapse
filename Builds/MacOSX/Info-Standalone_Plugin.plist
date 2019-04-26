@@ -10,9 +10,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.Juni.Procrastinator</string>
     <key>CFBundleName</key>
-    <string>Procrastinator</string>
+    <string>SimpleDelay</string>
     <key>CFBundleDisplayName</key>
-    <string>Procrastinator</string>
+    <string>SimpleDelay</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
