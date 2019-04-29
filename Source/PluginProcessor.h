@@ -85,12 +85,11 @@ private:
 	float* feedbackParameter = 0;// delay feedback knob value
 
 	float oldFeedback = 0;
+
 	AudioProcessorValueTreeState parameters; //means of connecting dsp params to ui elements
 
 
     //==============================================================================
-	//float gain = 0;
-	//float delayGain = 0;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessor)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessor)
 };
