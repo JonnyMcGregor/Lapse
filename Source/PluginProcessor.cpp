@@ -258,11 +258,11 @@ void SimpleDelayAudioProcessor::getFromDelayBuffer(AudioBuffer<float> &buffer, i
 //The feedback amount is calculated using the feedback knob.
 
 void SimpleDelayAudioProcessor::feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                                              const float* dryBuffer, float oldFeedback, float feedback)
+                                              const float* buffer, float oldFeedback, float feedback)
 {
     if(delayBufferLength > bufferLength + writePosition)
     {
-        delayBuffer.addFromWithRamp(channel, writePosition, dryBuffer, bufferLength, oldFeedback, feedback);
+        delayBuffer.addFromWithRamp(channel, writePosition, buffer, bufferLength, oldFeedback, feedback);
     }
     else
     {
@@ -270,8 +270,8 @@ void SimpleDelayAudioProcessor::feedbackDelay(int channel, const int bufferLengt
 		//calculate the gain based on the feedback knob and writeposition within the buffer
 		const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
 	
-        delayBuffer.addFromWithRamp(channel, writePosition, dryBuffer, bufferRemaining, oldFeedback, midGain);
-        delayBuffer.addFromWithRamp(channel, 0, dryBuffer, bufferLength - bufferRemaining, midGain, feedback);
+        delayBuffer.addFromWithRamp(channel, writePosition, buffer, bufferRemaining, oldFeedback, midGain);
+        delayBuffer.addFromWithRamp(channel, 0, buffer, bufferLength - bufferRemaining, midGain, feedback);
     }
 }
 //==============================================================================

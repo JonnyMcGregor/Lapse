@@ -60,6 +60,8 @@ public:
 	
 	// Delay Functions:
 
+	void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
+
     void fillDelayBuffer(int channel, const int bufferLength, const int delayBufferLength,
                          const float* bufferData, const float* delayBufferData);
 
@@ -69,22 +71,23 @@ public:
     void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
                        const float* dryBuffer, float oldFeedback, float feedback);
 
-	void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
+	
 
 private:
 
-    AudioBuffer<float> delayBuffer; //Buffer to hold delayed audio content
+	// Dry/Wet Buffers
+    AudioBuffer<float> delayBuffer; //Circular Buffer to hold delayed audio content
     AudioBuffer<float> dryBuffer; //Buffer to hold dry content for mix
     
-	int writePosition { 0 }; //Stores the index position of the delay buffer to manage the overlap when writing to output buffer
-	int mSampleRate  { 44100 };//default sample rate value
+	int writePosition = 0; //Stores the index position of the delay buffer to manage the overlap when writing.
+	int mSampleRate  = 44100; //default sample rate value
 	
 	//Parameters values that correspond to knobs in UI
-	float* mixParameter = 0;// dry/wet knob value
-	float* delayParameter = 0;// delay time knob value
-	float* feedbackParameter = 0;// delay feedback knob value
+	float* mixParameter = 0; // dry/wet knob value
+	float* delayParameter = 0; // delay time knob value
+	float* feedbackParameter = 0; // delay feedback knob value
 
-	float oldFeedback = 0;
+	float oldFeedback = 0; // old feedback value for calculating feedback gain
 
 	AudioProcessorValueTreeState parameters; //means of connecting dsp params to ui elements
 
