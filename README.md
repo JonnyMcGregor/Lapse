@@ -1,5 +1,5 @@
 # BasicDelayPlugin
-![SplashScreen](Resources/SplashScreen.png)
+![SplashScreen](Resources/Lapse_Design.png)
 
 This is a basic delay plugin with Mix, Feedback, and Delay Time parameters.
 
