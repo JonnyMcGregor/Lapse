@@ -37,7 +37,25 @@ SimpleDelayAudioProcessor::SimpleDelayAudioProcessor()
 											   "Feedback",
 											    0,
 											    2.0,
-											    1.0)
+											    1.0),
+		  std::make_unique<AudioParameterFloat>("frequency",        // parameter ID
+												"Cutoff Frequency", // parameter name
+												20.0f,              // minimum value
+												20000.0f,           // maximum value
+												20000.0f),            // default value
+		  std::make_unique<AudioParameterFloat>("resonance",
+												"Resonance",
+												1.0f,
+												5.0f,
+												2.0f),
+		  std::make_unique<AudioParameterChoice>("filterMenu",  //ID
+												 "Filter Type", //Name
+												 menuChoices,   //Combobox Choices
+												 0),			//default index value
+		  std::make_unique<AudioParameterBool>("isReversing",
+											     "Is Reversing",
+											     false,
+											     "isReversing")
 		})
 #endif
 {
@@ -45,6 +63,7 @@ SimpleDelayAudioProcessor::SimpleDelayAudioProcessor()
 	mixParameter = parameters.getRawParameterValue("mix");
 	delayParameter = parameters.getRawParameterValue("delayTime");
 	feedbackParameter = parameters.getRawParameterValue("feedback");
+	reverseParameter = parameters.getRawParameterValue("isReversing");
 }
 
 SimpleDelayAudioProcessor::~SimpleDelayAudioProcessor()
@@ -118,16 +137,55 @@ void SimpleDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     const int numberInputChannels = getTotalNumInputChannels();   //variable for number of input channels
     const int delayBufferSize = 2*(sampleRate + samplesPerBlock); //variable for buffer size
-    mSampleRate = sampleRate;									  //set sample rate to global variable
-    delayBuffer.setSize(numberInputChannels, delayBufferSize);   //Setup parameters for mDelayBuffer
-    dryBuffer.setSize(numberInputChannels, samplesPerBlock);     //Setup parameters for mDryBuffer
-	
+    lastSampleRate = sampleRate;									  //set sample rate to global variable
+    delayBuffer.setSize(numberInputChannels, delayBufferSize);   //Setup parameters for delayBuffer
+    dryBuffer.setSize(numberInputChannels, samplesPerBlock);     //Setup parameters for dryBuffer
+	reverseBuffer.setSize(numberInputChannels, delayBufferSize); //Setup parameters for reverseBuffer
+
+	//The ProcessSpec is a struct which contains information on the audio 
+	//which gets passed to a dsp object's prepare() function.
+
+	//Initialise Process Spec
+	dsp::ProcessSpec spec;
+	spec.sampleRate = lastSampleRate;
+	spec.maximumBlockSize = samplesPerBlock;
+	spec.numChannels = getMainBusNumOutputChannels();
+
+	//Clear the State Variable Filter in case there's garbage left over in it
+	stateVariableFilter.reset();
+	updateFilter();
+	//Pass info stored in spec to the prepare function of the filter.
+	stateVariableFilter.prepare(spec);
 }
 
 void SimpleDelayAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+}
+
+void SimpleDelayAudioProcessor::updateFilter()
+{
+	auto menuChoice = *parameters.getRawParameterValue("filterMenu");
+	auto filterFreq = *parameters.getRawParameterValue("frequency");
+	auto res = *parameters.getRawParameterValue("resonance");
+
+	if (menuChoice == 0)
+	{
+		stateVariableFilter.state->type = dsp::StateVariableFilter::Parameters<float>::Type::lowPass;
+		stateVariableFilter.state->setCutOffFrequency(lastSampleRate, filterFreq, res);
+}
+	if (menuChoice == 1)
+	{
+		stateVariableFilter.state->type = dsp::StateVariableFilter::Parameters<float>::Type::bandPass;
+		stateVariableFilter.state->setCutOffFrequency(lastSampleRate, filterFreq, res);
+
+	}
+	if (menuChoice == 2)
+	{
+		stateVariableFilter.state->type = dsp::StateVariableFilter::Parameters<float>::Type::highPass;
+		stateVariableFilter.state->setCutOffFrequency(lastSampleRate, filterFreq, res);
+	}
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -165,6 +223,7 @@ void SimpleDelayAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 	{
 		buffer.clear(i, 0, buffer.getNumSamples());
 		delayBuffer.clear(i, 0, delayBuffer.getNumSamples());
+		reverseBuffer.clear(i, 0, reverseBuffer.getNumSamples());
 	}
 
 	
@@ -173,34 +232,71 @@ void SimpleDelayAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	int delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
+	bool isReverseEffect = *reverseParameter;
+
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         float* bufferData = buffer.getWritePointer(channel); //local pointer for audio data stored inside buffer
         float* delayBufferData = delayBuffer.getWritePointer(channel); //local pointer for delayed audio data
-        
+		
         fillDryBuffer(channel, bufferLength, bufferData);
         
 		float* dryBufferData = dryBuffer.getWritePointer(channel);
 		
         fillDelayBuffer(channel, bufferLength, delayBufferLength, bufferData, delayBufferData);
+
+		if (isReverseEffect == 1);
+		{
+			fillReverseBuffer(channel, delayBufferLength, bufferLength);
+		}
+
+		float* reverseBufferData = reverseBuffer.getWritePointer(channel);
         
-        getFromDelayBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, delayBufferData, delayTime);
+        getFromDelayBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, delayBufferData, reverseBufferData, delayTime, isReverseEffect);
         
-        delayBufferData = delayBuffer.getWritePointer(channel);
-        
+		fillDrawingBuffer(channel, dryBuffer, buffer, bufferLength);
+
 		for (int sample = 0; sample < buffer.getNumSamples(); sample++)
 		{									 /*----------------- DRY_MIX ---------------------- + ---------------- WET_MIX -------------- MEAN*/
 			buffer.setSample(channel, sample, ((dryBufferData[sample] * (2.0 - *mixParameter)) + (bufferData[sample] * *mixParameter)) / 2.0f);
 		}
-		
-		feedbackDelay(channel, bufferLength, delayBufferLength, bufferData, oldFeedback, feedback);
+
+		if (counter == 0 || counter % 8 == 0) 
+		{
+			feedbackDelay(channel, bufferLength, delayBufferLength, bufferData, oldFeedback, feedback, isReverseEffect);
+		}
+
+		if (counter > 8)
+		{
+			counter = 0;
+		}
+		counter++;
 		oldFeedback = feedback;
 		
     }
+	
+	dsp::AudioBlock<float> block(buffer);
+
+	updateFilter();
+
+	stateVariableFilter.process(dsp::ProcessContextReplacing<float>(block));
+
     //Update write position for tracking delay buffer position
     writePosition += bufferLength;
     writePosition %= delayBufferLength;
+}
+//Fills an array of samples for waveform drawing
+void SimpleDelayAudioProcessor::fillDrawingBuffer(int channel, AudioBuffer<float> &dryBuffer, AudioBuffer<float> &buffer, const int bufferLength)
+{
+	int indexValueScaled;
+	for (int i = 0; i < audioDataToDraw.size(); i++)
+	{
+		indexValueScaled = scale(i, 0, bufferLength - 1, 0, audioDataToDraw.size() - 1);
+		audioDataToDraw[i] = dryBuffer.getSample(channel, indexValueScaled);
+		delayAudioDataToDraw[i] = buffer.getSample(channel, indexValueScaled);
+	}
+	drawBufferIsFull.sendChangeMessage();
 }
 
 //==============================================================================
@@ -231,48 +327,103 @@ void SimpleDelayAudioProcessor::fillDelayBuffer(int channel, const int bufferLen
     }
 }
 //==============================================================================
+void SimpleDelayAudioProcessor::fillReverseBuffer(int channel, const int delayBufferLength, const int bufferLength)
+{
+	if (delayBufferLength > bufferLength + writePosition)
+	{
+		for (int i = writePosition; i < writePosition + dryBuffer.getNumSamples(); i++)
+		{
+			reverseBuffer.setSample(channel, reverseBuffer.getNumSamples() - 1 - i, delayBuffer.getSample(channel, i));
+		}
+	}
+	else
+	{
+		const int bufferRemaining = delayBufferLength - writePosition;
+		for (int i = 0; i < bufferRemaining; i++)
+		{
+			reverseBuffer.setSample(channel, bufferRemaining - i, delayBuffer.getSample(channel, delayBuffer.getNumSamples() - 1 - bufferRemaining + i));
+			reverseBuffer.setSample(channel, delayBuffer.getNumSamples() - 1, delayBuffer.getSample(channel, i));
+		}
+	}
+}
+//==============================================================================
 //Copy delay buffer data into the main buffer according to the delay time parameter.
 //This function creates a single delay in the output
 
 void SimpleDelayAudioProcessor::getFromDelayBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
-                                                   const float* bufferData, const float* delayBufferData, int delayTime)
+                                                   const float* bufferData, const float* delayBufferData, const float* reverseBufferData, int delayTime, bool isReverseEffect)
 {
-    int delayTimeSamples = mSampleRate * delayTime / 1000;
+    int delayTimeSamples = lastSampleRate * delayTime / 1000;
     const int readPosition = static_cast<int> (delayBufferLength + (writePosition - delayTimeSamples)) % delayBufferLength;
+	
+	if (isReverseEffect == 1)
+	{
+		if (delayBufferLength > bufferLength + readPosition)
+		{
+			buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferLength);
+		}
 
-    if(delayBufferLength > bufferLength + readPosition)
-    {
-        buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferLength);
-    }
+		else
+		{
+			const int bufferRemaining = delayBufferLength - readPosition;
+			buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferRemaining);
+			buffer.copyFrom(channel, bufferRemaining, reverseBufferData, bufferLength - bufferRemaining);
+		}
+	}
 
-    else
-    {
-        const int bufferRemaining = delayBufferLength - readPosition;
-        buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferRemaining);
-        buffer.copyFrom(channel, bufferRemaining, delayBufferData, bufferLength - bufferRemaining);
-    }
+	else
+	{
+		if (delayBufferLength > bufferLength + readPosition)
+		{
+			buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferLength);
+		}
 
+		else
+		{
+			const int bufferRemaining = delayBufferLength - readPosition;
+			buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferRemaining);
+			buffer.copyFrom(channel, bufferRemaining, delayBufferData, bufferLength - bufferRemaining);
+		}
+	}
 }
 //==============================================================================
-//Feedback is achieved by copying the delay data back into the delay buffer
-//The feedback amount is calculated using the feedback knob.
-
+//Feedback is achieved by copying the delay data back into the delay buffer with reduced gain
+//The reduced gain amount is calculated using the feedback knob.
 void SimpleDelayAudioProcessor::feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                                              const float* dryBuffer, float oldFeedback, float feedback)
+                                              const float* bufferData, float oldFeedback, float feedback, bool isReverseEffect)
 {
-    if(delayBufferLength > bufferLength + writePosition)
-    {
-        delayBuffer.addFromWithRamp(channel, writePosition, dryBuffer, bufferLength, oldFeedback, feedback);
-    }
-    else
-    {
-        const int bufferRemaining = delayBufferLength - writePosition;
-		//calculate the gain based on the feedback knob and writeposition within the buffer
-		const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
-	
-        delayBuffer.addFromWithRamp(channel, writePosition, dryBuffer, bufferRemaining, oldFeedback, midGain);
-        delayBuffer.addFromWithRamp(channel, 0, dryBuffer, bufferLength - bufferRemaining, midGain, feedback);
-    }
+	if (isReverseEffect == 1)
+	{
+		if (delayBufferLength > bufferLength + writePosition)
+		{			
+			reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
+		}
+		else
+		{
+			const int bufferRemaining = delayBufferLength - writePosition;
+			//calculate the gain based on the feedback knob and writeposition within the buffer
+			const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
+
+			reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
+			reverseBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
+		}
+	}
+	else
+	{
+		if (delayBufferLength > bufferLength + writePosition)
+		{
+			delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
+		}
+		else
+		{
+			const int bufferRemaining = delayBufferLength - writePosition;
+			//calculate the gain based on the feedback knob and writeposition within the buffer
+			const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
+
+			delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
+			delayBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
+		}
+	}
 }
 //==============================================================================
 bool SimpleDelayAudioProcessor::hasEditor() const
@@ -282,7 +433,7 @@ bool SimpleDelayAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* SimpleDelayAudioProcessor::createEditor()
 {
-    return new SimpleDelayAudioProcessorEditor (*this, parameters);
+    return new SimpleDelayAudioProcessorEditor (*this, parameters, drawBufferIsFull);
 }
 
 //==============================================================================

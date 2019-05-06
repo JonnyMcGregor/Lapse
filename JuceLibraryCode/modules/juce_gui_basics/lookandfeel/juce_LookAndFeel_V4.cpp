@@ -1053,7 +1053,7 @@ void LookAndFeel_V4::drawRotarySlider (Graphics& g, int x, int y, int width, int
 
     auto radius = jmin (bounds.getWidth(), bounds.getHeight()) / 2.0f;
     auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    auto lineW = jmin (8.0f, radius * 0.5f);
+    auto lineW = radius * 0.08;
     auto arcRadius = radius - lineW * 0.5f;
 
     Path backgroundArc;
@@ -1085,11 +1085,13 @@ void LookAndFeel_V4::drawRotarySlider (Graphics& g, int x, int y, int width, int
         g.strokePath (valueArc, PathStrokeType (lineW, PathStrokeType::curved, PathStrokeType::rounded));
     }
 
-    auto thumbWidth = lineW * 2.0f;
+    auto thumbWidth = radius * 0.4f;
     Point<float> thumbPoint (bounds.getCentreX() + arcRadius * std::cos (toAngle - MathConstants<float>::halfPi),
                              bounds.getCentreY() + arcRadius * std::sin (toAngle - MathConstants<float>::halfPi));
 
     g.setColour (slider.findColour (Slider::thumbColourId));
+	g.drawEllipse(Rectangle<float>(thumbWidth, thumbWidth).withCentre(thumbPoint), radius * 0.08);
+	g.setColour(slider.findColour(Slider::thumbFillColourId));
     g.fillEllipse (Rectangle<float> (thumbWidth, thumbWidth).withCentre (thumbPoint));
 }
 
