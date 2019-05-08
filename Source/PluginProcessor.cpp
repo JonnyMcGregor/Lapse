@@ -51,7 +51,7 @@ SimpleDelayAudioProcessor::SimpleDelayAudioProcessor()
 		  std::make_unique<AudioParameterChoice>("filterMenu",  //ID
 												 "Filter Type", //Name
 												 menuChoices,   //Combobox Choices
-												 0),			//default index value
+												 0.0f),			//default index value
 		  std::make_unique<AudioParameterBool>("isReversing",
 											     "Is Reversing",
 											     false,
@@ -156,12 +156,20 @@ void SimpleDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 	updateFilter();
 	//Pass info stored in spec to the prepare function of the filter.
 	stateVariableFilter.prepare(spec);
+
+	for (int i = 0; i < getNumInputChannels(); i++)
+	{
+		delayBuffer.clear(i, 0, delayBuffer.getNumSamples());
+		reverseBuffer.clear(i, 0, reverseBuffer.getNumSamples());
+	}
 }
 
 void SimpleDelayAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+	
+
 }
 
 void SimpleDelayAudioProcessor::updateFilter()
@@ -232,7 +240,7 @@ void SimpleDelayAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
 
 	int delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
-	bool isReverseEffect = *reverseParameter;
+	int isReverseEffect = *reverseParameter;
 
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -243,37 +251,50 @@ void SimpleDelayAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBu
         fillDryBuffer(channel, bufferLength, bufferData);
         
 		float* dryBufferData = dryBuffer.getWritePointer(channel);
-		
-        fillDelayBuffer(channel, bufferLength, delayBufferLength, bufferData, delayBufferData);
-
-		if (isReverseEffect == 1);
-		{
-			fillReverseBuffer(channel, delayBufferLength, bufferLength);
-		}
 
 		float* reverseBufferData = reverseBuffer.getWritePointer(channel);
-        
-        getFromDelayBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, delayBufferData, reverseBufferData, delayTime, isReverseEffect);
-        
-		fillDrawingBuffer(channel, dryBuffer, buffer, bufferLength);
 
+		
+		fillDelayBuffer(channel, bufferLength, delayBufferLength, bufferData, delayBufferData);
+		
+		//if (isReverseEffect == 1)
+			//reverseDelayBuffer(channel, delayBufferLength, bufferLength);
+
+		//getFromReverseBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, reverseBufferData, delayTime);
+
+		//else
+		//{
+		//	fillDelayBuffer(channel, bufferLength, delayBufferLength, bufferData, delayBufferData);
+			getFromDelayBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, delayBufferData, delayTime);
+		//}
+		
 		for (int sample = 0; sample < buffer.getNumSamples(); sample++)
 		{									 /*----------------- DRY_MIX ---------------------- + ---------------- WET_MIX -------------- MEAN*/
 			buffer.setSample(channel, sample, ((dryBufferData[sample] * (2.0 - *mixParameter)) + (bufferData[sample] * *mixParameter)) / 2.0f);
 		}
 
-		if (counter == 0 || counter % 8 == 0) 
+		//if (isReverseEffect == 1)
+		//{
+		//	reverseFeedbackDelay(channel, bufferLength, delayBufferLength, bufferData, oldFeedback, feedback);
+		//}
+
+		//else
+		//{
+			feedbackDelay(channel, bufferLength, delayBufferLength, bufferData, oldFeedback, feedback);
+		//}
+
+		if (counter == 0 || counter % 8 == 0)
 		{
-			feedbackDelay(channel, bufferLength, delayBufferLength, bufferData, oldFeedback, feedback, isReverseEffect);
+			fillDrawingBuffer(channel, dryBuffer, buffer, bufferLength);
 		}
 
-		if (counter > 8)
+		else if (counter > 8)
 		{
 			counter = 0;
 		}
+
 		counter++;
 		oldFeedback = feedback;
-		
     }
 	
 	dsp::AudioBlock<float> block(buffer);
@@ -301,8 +322,7 @@ void SimpleDelayAudioProcessor::fillDrawingBuffer(int channel, AudioBuffer<float
 
 //==============================================================================
 //Fill dry buffer with raw audio data, this will then be applied to the mix variable
-void SimpleDelayAudioProcessor::fillDryBuffer(int channel, const int bufferLength,
-                                                const float* bufferData)
+void SimpleDelayAudioProcessor::fillDryBuffer(int channel, const int bufferLength, const float* bufferData)
 {
         dryBuffer.copyFrom(channel, 0, bufferData, bufferLength);
 }
@@ -327,102 +347,112 @@ void SimpleDelayAudioProcessor::fillDelayBuffer(int channel, const int bufferLen
     }
 }
 //==============================================================================
-void SimpleDelayAudioProcessor::fillReverseBuffer(int channel, const int delayBufferLength, const int bufferLength)
-{
-	if (delayBufferLength > bufferLength + writePosition)
-	{
-		for (int i = writePosition; i < writePosition + dryBuffer.getNumSamples(); i++)
-		{
-			reverseBuffer.setSample(channel, reverseBuffer.getNumSamples() - 1 - i, delayBuffer.getSample(channel, i));
-		}
-	}
-	else
-	{
-		const int bufferRemaining = delayBufferLength - writePosition;
-		for (int i = 0; i < bufferRemaining; i++)
-		{
-			reverseBuffer.setSample(channel, bufferRemaining - i, delayBuffer.getSample(channel, delayBuffer.getNumSamples() - 1 - bufferRemaining + i));
-			reverseBuffer.setSample(channel, delayBuffer.getNumSamples() - 1, delayBuffer.getSample(channel, i));
-		}
-	}
-}
-//==============================================================================
 //Copy delay buffer data into the main buffer according to the delay time parameter.
 //This function creates a single delay in the output
 
 void SimpleDelayAudioProcessor::getFromDelayBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
-                                                   const float* bufferData, const float* delayBufferData, const float* reverseBufferData, int delayTime, bool isReverseEffect)
+	const float* bufferData, const float* delayBufferData, int delayTime)
 {
-    int delayTimeSamples = lastSampleRate * delayTime / 1000;
-    const int readPosition = static_cast<int> (delayBufferLength + (writePosition - delayTimeSamples)) % delayBufferLength;
-	
-	if (isReverseEffect == 1)
-	{
-		if (delayBufferLength > bufferLength + readPosition)
-		{
-			buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferLength);
-		}
+	int delayTimeSamples = lastSampleRate * delayTime / 1000;
+	const int readPosition = static_cast<int> (delayBufferLength + (writePosition - delayTimeSamples)) % delayBufferLength;
 
-		else
+	if (delayBufferLength > bufferLength + readPosition)
+	{
+		if (*reverseParameter == 1)
 		{
-			const int bufferRemaining = delayBufferLength - readPosition;
-			buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferRemaining);
-			buffer.copyFrom(channel, bufferRemaining, reverseBufferData, bufferLength - bufferRemaining);
+			delayBuffer.reverse(channel, readPosition, bufferLength);
 		}
+		buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferLength);
 	}
 
 	else
 	{
-		if (delayBufferLength > bufferLength + readPosition)
+		const int bufferRemaining = delayBufferLength - readPosition;
+		if (*reverseParameter == 1)
 		{
-			buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferLength);
+			delayBuffer.reverse(channel, readPosition, bufferRemaining);
+			delayBuffer.reverse(channel, 0, bufferLength - bufferRemaining);
 		}
-
-		else
-		{
-			const int bufferRemaining = delayBufferLength - readPosition;
-			buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferRemaining);
-			buffer.copyFrom(channel, bufferRemaining, delayBufferData, bufferLength - bufferRemaining);
-		}
+		buffer.copyFrom(channel, 0, delayBufferData + readPosition, bufferRemaining);
+		buffer.copyFrom(channel, bufferRemaining, delayBufferData, bufferLength - bufferRemaining);
 	}
 }
+//==============================================================================
+
+void SimpleDelayAudioProcessor::reverseDelayBuffer(int channel, const int delayBufferLength, const int bufferLength)
+{
+	if (delayBufferLength > bufferLength + writePosition)
+	{
+		delayBuffer.reverse(channel, writePosition, bufferLength);
+
+	}
+	else
+	{
+		const int bufferRemaining = delayBufferLength - writePosition;
+
+		delayBuffer.reverse(channel, writePosition, bufferRemaining);
+		delayBuffer.reverse(channel, 0, bufferLength - bufferRemaining);
+	}
+}
+//==============================================================================
+
+void SimpleDelayAudioProcessor::getFromReverseBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
+													 const float* bufferData, const float* reverseBufferData, int delayTime)
+{
+	int delayTimeSamples = lastSampleRate * delayTime / 1000;
+	const int readPosition = static_cast<int> (delayBufferLength + (writePosition - delayTimeSamples)) % delayBufferLength;
+
+	if (delayBufferLength > bufferLength + readPosition)
+	{
+		buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferLength);
+	}
+
+	else
+	{
+		const int bufferRemaining = delayBufferLength - readPosition;
+		
+		buffer.copyFrom(channel, 0, reverseBufferData + readPosition, bufferRemaining);
+		buffer.copyFrom(channel, bufferRemaining, reverseBufferData, bufferLength - bufferRemaining);
+	}
+	
+}
+
 //==============================================================================
 //Feedback is achieved by copying the delay data back into the delay buffer with reduced gain
 //The reduced gain amount is calculated using the feedback knob.
 void SimpleDelayAudioProcessor::feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                                              const float* bufferData, float oldFeedback, float feedback, bool isReverseEffect)
+                                              const float* bufferData, float oldFeedback, float feedback)
 {
-	if (isReverseEffect == 1)
+	if (delayBufferLength > bufferLength + writePosition)
 	{
-		if (delayBufferLength > bufferLength + writePosition)
-		{			
-			reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
-		}
-		else
-		{
-			const int bufferRemaining = delayBufferLength - writePosition;
-			//calculate the gain based on the feedback knob and writeposition within the buffer
-			const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
-
-			reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
-			reverseBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
-		}
+		delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
 	}
 	else
 	{
-		if (delayBufferLength > bufferLength + writePosition)
-		{
-			delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
-		}
-		else
-		{
-			const int bufferRemaining = delayBufferLength - writePosition;
-			//calculate the gain based on the feedback knob and writeposition within the buffer
-			const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
+		const int bufferRemaining = delayBufferLength - writePosition;
+		//calculate the gain based on the feedback knob and writeposition within the buffer
+		const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
 
-			delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
-			delayBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
-		}
+		delayBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
+		delayBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
+	}
+}
+
+void SimpleDelayAudioProcessor::reverseFeedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
+						  const float* bufferData, float oldFeedback, float feedback)
+{
+	if (delayBufferLength > bufferLength + writePosition)
+	{
+		reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferLength, oldFeedback, feedback);
+	}
+	else
+	{
+		const int bufferRemaining = delayBufferLength - writePosition;
+		//calculate the gain based on the feedback knob and writeposition within the buffer
+		const float midGain = oldFeedback + ((feedback - oldFeedback / bufferLength) * (bufferRemaining / bufferLength));
+
+		reverseBuffer.addFromWithRamp(channel, writePosition, bufferData, bufferRemaining, oldFeedback, midGain);
+		reverseBuffer.addFromWithRamp(channel, 0, bufferData, bufferLength - bufferRemaining, midGain, feedback);
 	}
 }
 //==============================================================================

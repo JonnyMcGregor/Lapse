@@ -65,14 +65,20 @@ public:
                          const float* bufferData, const float* delayBufferData);
 
     void getFromDelayBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
-                            const float* bufferData, const float* delayBufferData, const float* reverseBufferData, int delayTime, bool isReverseEffect);
+                            const float* bufferData, const float* delayBufferData, int delayTime);
+	
+	void getFromReverseBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
+							  const float* bufferData, const float* reverseBufferData, int delayTime);
+    
+	void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
+                       const float* bufferData, float oldFeedback, float feedback);
 
-    void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                       const float* bufferData, float oldFeedback, float feedback, bool isReverse);
+	void reverseFeedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
+		const float* bufferData, float oldFeedback, float feedback);
 
 	void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
 
-	void fillReverseBuffer(int channel, const int delayBufferLength, const int bufferLength);
+	void reverseDelayBuffer(int channel, const int delayBufferLength, const int bufferLength);
 
 	void fillDrawingBuffer(int channel, AudioBuffer<float> &dryBuffer, AudioBuffer<float> &buffer, const int bufferLength);
 
