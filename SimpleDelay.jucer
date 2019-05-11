@@ -6,8 +6,8 @@
               pluginManufacturerCode="Juni" pluginCode="Juni" splashScreenColour="Dark">
   <MAINGROUP id="cHUKqO" name="SimpleDelay">
     <GROUP id="{4BC82CAC-B66E-8A9F-B26A-ED244C282787}" name="Resources">
-      <FILE id="cq74br" name="lapseDown.png" compile="0" resource="1" file="../../University/MCE/Semester 2/Major Project/0.5x/lapseDown.png"/>
-      <FILE id="bZ0WwR" name="lapse.png" compile="0" resource="1" file="../../University/MCE/Semester 2/Major Project/0.5x/lapse.png"/>
+      <FILE id="e1hu2S" name="lapse.png" compile="0" resource="1" file="Resources/lapse.png"/>
+      <FILE id="nk5egE" name="lapseDown.png" compile="0" resource="1" file="Resources/lapseDown.png"/>
     </GROUP>
     <GROUP id="{4D8D452E-A99A-0D0F-91E1-EE3F300CE5FF}" name="Source">
       <FILE id="xN32vE" name="PluginProcessor.cpp" compile="1" resource="0"

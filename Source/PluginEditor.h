@@ -31,7 +31,9 @@ public:
 	void setUpAttachments();
 	void drawWaveform(Graphics&);
 	void changeListenerCallback(ChangeBroadcaster *source) override;
-	float scale(float A, float A1, float A2, float Min, float Max);
+
+	float fractionWidth(float fraction);
+	float fractionHeight(float fraction);
 
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment;
@@ -70,6 +72,16 @@ private:
 	Label feedbackLabel;
 	Label frequencyLabel;
 	Label resonanceLabel;
+	
+	Colour primaryColour = Colour::fromRGB(239, 152, 24);
+	Colour primaryColourLighter = Colour::fromRGB(244, 174, 81);
+
+	Colour secondaryColour = Colour::fromRGB(105, 181, 204);
+	Colour secondaryColourLighter = Colour::fromRGB(158, 202, 219);
+
+	Colour backgroundColour = Colour::fromRGB(249, 212, 157);
+
+	float waveLineThickness = 2.0f;
 
 	LookAndFeel_V4 lf;
 
