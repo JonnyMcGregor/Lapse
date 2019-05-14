@@ -1,8 +1,14 @@
 # Lapse
 ![SplashScreen](Resources/Lapse_Design.png)
 
-Lapse is a basic delay plugin with Mix, Feedback, and Delay Time parameters. Lapse also has included a state variable filter.
+Lapse is a basic delay plugin with Mix, Feedback, and Delay Time parameters. Lapse also has included a state variable filter, and reverse effect, which is activated by clicking on the Lapse title.
 
-To run on MacOSX, open the XCode project in Builds/MacOSX. Build and run to generate the VST and standalone application.
+To run on MacOSX:
 
-Copy the VST into your plugin folder for your chosen DAW and it should be good to go :)
+1. Open the XCode project in Builds/MacOSX. 
+
+2. Build and run to generate the VST and standalone application.
+
+3. Copy the VST into your plugin folder for your chosen DAW.
+
+4. Launch VST within chosen DAW and enjoy Lapse!
