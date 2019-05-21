@@ -10,6 +10,10 @@
       <FILE id="nk5egE" name="lapseDown.png" compile="0" resource="1" file="Resources/lapseDown.png"/>
     </GROUP>
     <GROUP id="{4D8D452E-A99A-0D0F-91E1-EE3F300CE5FF}" name="Source">
+      <FILE id="JUBBPC" name="DelayContainer.cpp" compile="1" resource="0"
+            file="Source/DelayContainer.cpp"/>
+      <FILE id="xSAZJl" name="DelayContainer.h" compile="0" resource="0"
+            file="Source/DelayContainer.h"/>
       <FILE id="xN32vE" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="ruNFv5" name="PluginProcessor.h" compile="0" resource="0"

@@ -36,26 +36,23 @@ SimpleDelayAudioProcessorEditor::SimpleDelayAudioProcessorEditor (SimpleDelayAud
 	reverseButton.setColour(DrawableButton::ColourIds::backgroundOnColourId, backgroundColour);
 	//Set up attachments
 	setUpAttachments();
-	
+
 	//Make GUI elements visible
 	addAndMakeVisible(mixLabel);
 	addAndMakeVisible(delayTimeLabel);
 	addAndMakeVisible(feedbackLabel);
 	addAndMakeVisible(frequencyLabel);
 	addAndMakeVisible(resonanceLabel);
-
 	addAndMakeVisible(mixKnob);
 	addAndMakeVisible(delayTimeKnob);
 	addAndMakeVisible(feedbackKnob);
 	addAndMakeVisible(frequencyKnob);
 	addAndMakeVisible(resonanceKnob);
-
 	addAndMakeVisible(filterMenu);
 	addAndMakeVisible(lapseTitle);
-
 	addAndMakeVisible(reverseButton);
 
-	//This skew factor makes the freq knob logarithmic
+	//This skew factor makes the freq knob behave logarithmically
 	frequencyKnob.setSkewFactorFromMidPoint(1000.0f);
 
 	broadcaster.addChangeListener(this);
@@ -107,7 +104,7 @@ void SimpleDelayAudioProcessorEditor::initialiseKnob(Slider& knob, Colour colour
 	knob.setColour(Slider::ColourIds::thumbColourId, colour1);
 	knob.setColour(Slider::ColourIds::thumbFillColourId, colour2);
 }
-
+//==============================================================================
 void SimpleDelayAudioProcessorEditor::setUpAttachments()
 {
 	mixAttachment.reset(new AudioProcessorValueTreeState::SliderAttachment(state, "mix", mixKnob));
@@ -120,55 +117,61 @@ void SimpleDelayAudioProcessorEditor::setUpAttachments()
 }
 
 //==============================================================================
-void SimpleDelayAudioProcessorEditor::paint (Graphics& g)
-{
-	g.fillAll(backgroundColour);
-	g.setColour(primaryColour);
-	g.drawLine(Line<float>(fractionWidth(0.60), fractionHeight(0.25), fractionWidth(0.60), fractionHeight(0.66)), 0.5);
-	drawWaveform(g);
-}
-float  SimpleDelayAudioProcessorEditor::fractionWidth(float fraction)
+float  SimpleDelayAudioProcessorEditor::fractionOfWindowWidth(float fraction)
 {
 	return getWidth() * fraction;
 }
 
-float  SimpleDelayAudioProcessorEditor::fractionHeight(float fraction)
+float  SimpleDelayAudioProcessorEditor::fractionOfWindowHeight(float fraction)
 {
 	return getHeight() * fraction;
 }
 
+//==============================================================================
+void SimpleDelayAudioProcessorEditor::paint (Graphics& g)
+{
+	g.fillAll(backgroundColour);
+	g.setColour(primaryColour);
+	g.drawLine(Line<float>(fractionOfWindowWidth(0.60), fractionOfWindowHeight(0.25), fractionOfWindowWidth(0.60), fractionOfWindowHeight(0.66)), 0.5);
+	drawWaveform(g);
+}
+
+//==============================================================================
 void SimpleDelayAudioProcessorEditor::resized()
 {
 	auto r = getLocalBounds();
 	
 
-	mixKnob.setBounds(fractionWidth(0.25f) - 30, fractionHeight(0.75f) - 10, 60, 60);
-	delayTimeKnob.setBounds(fractionWidth(0.5f) - 30, fractionHeight(0.75f) - 10, 60, 60);
-	feedbackKnob.setBounds(fractionWidth(0.75f) - 30, fractionHeight(0.75f) - 10, 60, 60);
+	mixKnob.setBounds(fractionOfWindowWidth(0.25f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
+	delayTimeKnob.setBounds(fractionOfWindowWidth(0.5f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
+	feedbackKnob.setBounds(fractionOfWindowWidth(0.75f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
 
-	mixLabel.setBounds(fractionWidth(0.25f) - 40, fractionHeight(0.75f) + 20, 80, 60);
-	delayTimeLabel.setBounds(fractionWidth(0.5f) - 40, fractionHeight(0.75f) + 20, 80, 60);
-	feedbackLabel.setBounds(fractionWidth(0.75f) - 40, fractionHeight(0.75f) + 20, 80, 60);
+	mixLabel.setBounds(fractionOfWindowWidth(0.25f) - 40, fractionOfWindowHeight(0.75f) + 20, 80, 60);
+	delayTimeLabel.setBounds(fractionOfWindowWidth(0.5f) - 40, fractionOfWindowHeight(0.75f) + 20, 80, 60);
+	feedbackLabel.setBounds(fractionOfWindowWidth(0.75f) - 40, fractionOfWindowHeight(0.75f) + 20, 80, 60);
 
-	filterMenu.setBounds(fractionWidth(0.75f) - 40, fractionHeight(0.33f), 80, 30);
+	filterMenu.setBounds(fractionOfWindowWidth(0.75f) - 40, fractionOfWindowHeight(0.33f), 80, 30);
 
-	frequencyKnob.setBounds(fractionWidth(0.66f) - 5, fractionHeight(0.5f) - 10, 50, 50);
-	resonanceKnob.setBounds(fractionWidth(0.66f) + 40, fractionHeight(0.5f) - 10, 50, 50);
+	frequencyKnob.setBounds(fractionOfWindowWidth(0.66f) - 5, fractionOfWindowHeight(0.5f) - 10, 50, 50);
+	resonanceKnob.setBounds(fractionOfWindowWidth(0.66f) + 40, fractionOfWindowHeight(0.5f) - 10, 50, 50);
 
-	frequencyLabel.setBounds(fractionWidth(0.66f) - 10, fractionHeight(0.5f) - 10, 60, 100);
-	resonanceLabel.setBounds(fractionWidth(0.66f) + 35, fractionHeight(0.5f) - 10, 60, 100);
+	frequencyLabel.setBounds(fractionOfWindowWidth(0.66f) - 10, fractionOfWindowHeight(0.5f) - 10, 60, 100);
+	resonanceLabel.setBounds(fractionOfWindowWidth(0.66f) + 35, fractionOfWindowHeight(0.5f) - 10, 60, 100);
 
-	reverseButton.setBounds(fractionWidth(0.25f) - 18, fractionHeight(0.125f) - 20, 97, 36);
+	reverseButton.setBounds(fractionOfWindowWidth(0.25f) - 18, fractionOfWindowHeight(0.125f) - 20, 97, 36);
 }
 
+//==============================================================================
 void SimpleDelayAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source)
 {
 	repaint();
 }
 
+//=============================================================================
 void SimpleDelayAudioProcessorEditor::drawWaveform(Graphics& g)
 {
-	Rectangle<float> waveformArea = Rectangle<float>(fractionWidth(0.1), fractionHeight(0.25), fractionWidth(0.45), fractionHeight(0.5));
+	Rectangle<float> waveformArea = Rectangle<float>(fractionOfWindowWidth(0.1), fractionOfWindowHeight(0.25), 
+												     fractionOfWindowWidth(0.45), fractionOfWindowHeight(0.5));
 	int indexValueScaled;
 	float scaledAmplitude;
 	float delayScaledAmplitude;

@@ -22,7 +22,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-
+#include "DelayContainer.h"
 //==============================================================================
 /**
 */
@@ -69,21 +69,6 @@ public:
 	void updateFilter();
 	//==============================================================================
 	
-	// Delay Functions:
-	
-    void fillDelayBuffer(int channel, const int bufferLength, const int delayBufferLength,
-                         const float* bufferData, const float* delayBufferData);
-
-    void getFromDelayBuffer(AudioBuffer<float> &buffer, int channel, const int bufferLength, const int delayBufferLength,
-                            const float* bufferData, const float* delayBufferData, const float* reverseBufferData, int delayTime, bool isReverseEffect);
-
-    void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength,
-                       const float* bufferData, float oldFeedback, float feedback, bool isReverse);
-
-	void fillDryBuffer(int channel, const int bufferLength, const float* bufferData);
-
-	void fillReverseBuffer(int channel, const int delayBufferLength, const int bufferLength);
-
 	void fillDrawingBuffer(int channel, AudioBuffer<float> &dryBuffer, AudioBuffer<float> &buffer, const int bufferLength);
 
 	std::array<float, 175> audioDataToDraw; //this takes a portion of the audio data to be drawn
@@ -94,8 +79,13 @@ private:
     AudioBuffer<float> delayBuffer; //Buffer to hold delayed audio content
     AudioBuffer<float> dryBuffer; //Buffer to hold dry content for mix
 	AudioBuffer<float> reverseBuffer; //Buffer to hold reversed content
+
 	int writePosition { 0 }; //Stores the index position of the delay buffer to manage the overlap when writing to output buffer
+	int readPosition { 0 };
 	int lastSampleRate  { 44100 };
+
+	DelayContainer delayContainer = DelayContainer(&writePosition);
+
 	
 	//Parameters values that correspond to knobs in UI
 	float* mixParameter = 0;

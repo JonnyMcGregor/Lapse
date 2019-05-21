@@ -32,8 +32,8 @@ public:
 	void drawWaveform(Graphics&);
 	void changeListenerCallback(ChangeBroadcaster *source) override;
 
-	float fractionWidth(float fraction);
-	float fractionHeight(float fraction);
+	float fractionOfWindowWidth(float fraction);
+	float fractionOfWindowHeight(float fraction);
 
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment;

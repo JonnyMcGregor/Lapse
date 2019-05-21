@@ -73,6 +73,10 @@
 			isa = PBXBuildFile;
 			fileRef = 1A59CEFB1C4181A28F73BA13;
 		};
+		BBCC18CF65CC220E81B5F96F = {
+			isa = PBXBuildFile;
+			fileRef = 40B8170E6E6BD4DC5E1DCCD1;
+		};
 		04B982068BACFE7FA97A95CB = {
 			isa = PBXBuildFile;
 			fileRef = 94CDDF6D81B31AB77C7F50E5;
@@ -284,6 +288,13 @@
 			path = ../../JuceLibraryCode/AppConfig.h;
 			sourceTree = "SOURCE_ROOT";
 		};
+		40B8170E6E6BD4DC5E1DCCD1 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = DelayContainer.cpp;
+			path = ../../Source/DelayContainer.cpp;
+			sourceTree = "SOURCE_ROOT";
+		};
 		4CE30810F666E322E0B00B1E = {
 			isa = PBXFileReference;
 			lastKnownFileType = file;
@@ -339,6 +350,13 @@
 			name = Cocoa.framework;
 			path = System/Library/Frameworks/Cocoa.framework;
 			sourceTree = SDKROOT;
+		};
+		821ED0F65253600900184D3A = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = DelayContainer.h;
+			path = ../../Source/DelayContainer.h;
+			sourceTree = "SOURCE_ROOT";
 		};
 		859E092DD2BBD1AE082FB9ED = {
 			isa = PBXFileReference;
@@ -646,6 +664,8 @@
 		7E043AABC57D1CCA5C801A29 = {
 			isa = PBXGroup;
 			children = (
+				40B8170E6E6BD4DC5E1DCCD1,
+				821ED0F65253600900184D3A,
 				94CDDF6D81B31AB77C7F50E5,
 				C3500A956EA70C95C35278F0,
 				12ECDF7E6219DCCA39E4CFDA,
@@ -1706,6 +1726,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBCC18CF65CC220E81B5F96F,
 				04B982068BACFE7FA97A95CB,
 				C9F5110A5DD1D51C51C9B523,
 				63539E41FE904C12EF6F59B0,
