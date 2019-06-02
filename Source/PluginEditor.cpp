@@ -139,9 +139,6 @@ void SimpleDelayAudioProcessorEditor::paint (Graphics& g)
 //==============================================================================
 void SimpleDelayAudioProcessorEditor::resized()
 {
-	auto r = getLocalBounds();
-	
-
 	mixKnob.setBounds(fractionOfWindowWidth(0.25f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
 	delayTimeKnob.setBounds(fractionOfWindowWidth(0.5f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
 	feedbackKnob.setBounds(fractionOfWindowWidth(0.75f) - 30, fractionOfWindowHeight(0.75f) - 10, 60, 60);
