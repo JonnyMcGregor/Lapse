@@ -142,7 +142,6 @@ void SimpleDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 	delayBuffer.setSize(numberInputChannels, delayBufferSize);   
     dryBuffer.setSize(numberInputChannels, samplesPerBlock);    
 	reverseBuffer.setSize(numberInputChannels, delayBufferSize); 
-	pitchShiftBuffer.setSize(numberInputChannels, samplesPerBlock/2);
 	/*
 		The ProcessSpec is a struct which contains information on the audio 
 		that gets passed to a dsp object's prepare() function.
