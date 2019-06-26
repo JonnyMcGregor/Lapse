@@ -1,4 +1,3 @@
-# Lapse
 ![SplashScreen](Resources/Lapse_3rd_Sprint.png)
 
 Lapse is a basic delay plugin with Mix, Feedback, and Delay Time parameters. Lapse also has included a state variable filter, and reverse effect, which is activated by clicking on the Lapse title.
