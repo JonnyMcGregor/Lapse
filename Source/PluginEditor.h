@@ -33,7 +33,10 @@ public:
 	void selectNodeForMovement(const MouseEvent&);
 	void updateNodeSize(const MouseEvent &m);
 	void updateNodePosition(const MouseEvent &m);
+	
 	void updateFeedbackParameter();
+	void updatePanParameter();
+	void updateDelayTimeParameter();
 
 	void drawNodes(Graphics&);
     void resized() override;
@@ -79,10 +82,14 @@ private:
 	float diameter[10] {30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
 	float nodeX[10];
 	float nodeY[10];
-	int nodeCount = 0;
+	int numberOfVisibleNodes = 0;
 	int selectedNode = 0;
 	int currentDelayNode = 0;
 	ModifierKeys modKeys;
+
+	float feedback = 0;
+	float pan = 0;
+	float delayTime = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };

@@ -31,7 +31,7 @@ public:
    #endif
 
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
-
+	void panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue);
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -55,6 +55,8 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+	AudioProcessorValueTreeState parameters;
+
 private:
 
 	DelayContainer delayContainer = DelayContainer(&writePosition);
@@ -64,12 +66,11 @@ private:
 	float* delayParameter = 0;
 	float* feedbackParameter = 0;
 	float* reverseParameter = 0;
-
+	float* panParameter = 0;
 	int writePosition = 0;
 
 	float oldFeedback = 0;
 
-	AudioProcessorValueTreeState parameters;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessor)
