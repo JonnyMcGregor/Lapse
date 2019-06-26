@@ -1,9 +1,15 @@
-# Lapse
-![SplashScreen](Resources/Lapse_Design.png)
+![SplashScreen](Resources/Lapse_3rd_Sprint.png)
 
-Lapse is a basic delay plugin with Mix, Feedback, and Delay Time parameters. Lapse also has included a state variable filter, and reverse effect, which is activated by clicking on the Lapse title.
+Lapse is a node-based delay plugin designed to visually represent delay in an interactive way. Lapse will allow you to create awesome delays through automating delay time, feedback, and panning parameters through its intuitive user interface.
 
-To run on MacOSX:
+How to use:
+
+1. Add Lapse to a track in your chosen DAW.
+2. Double click to create a delay node.
+3. Click and drag on a node to select a pan position (x-axis) and delay time (y-axis).
+4. Click and drag while holding the shift key to increase or decrease the delay feedback.
+
+To install on MacOSX:
 
 1. Open the XCode project in Builds/MacOSX. 
 
