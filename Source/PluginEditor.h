@@ -12,25 +12,31 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
+#include "Node.h"
 
 //==============================================================================
 /**
 */
-class SimpleDelayAudioProcessorEditor  : public AudioProcessorEditor, public ChangeListener
+class LapseAudioProcessorEditor  : public AudioProcessorEditor
 {
 public:
-    SimpleDelayAudioProcessorEditor (SimpleDelayAudioProcessor&, AudioProcessorValueTreeState&, ChangeBroadcaster&);
-    ~SimpleDelayAudioProcessorEditor();
+    LapseAudioProcessorEditor (LapseAudioProcessor&, AudioProcessorValueTreeState&);
+    ~LapseAudioProcessorEditor();
 
     //==============================================================================
-    void paint (Graphics&) override;
-    void resized() override;
-	void initialiseLabel(Label& labelName, String text, Colour colour, float fontSize);
-	void initialiseFilterMenu();
-	void initialiseKnob(Slider& knob, Colour colour1, Colour colour2);
 	void setUpAttachments();
-	void drawWaveform(Graphics&);
-	void changeListenerCallback(ChangeBroadcaster *source) override;
+	void paint (Graphics&) override;
+	void createNode();
+	void mouseDoubleClick(const MouseEvent&);
+	void mouseDrag(const MouseEvent&);
+	
+	void selectNodeForMovement(const MouseEvent&);
+	void updateNodeSize(const MouseEvent &m);
+	void updateNodePosition(const MouseEvent &m);
+	void updateFeedbackParameter();
+
+	void drawNodes(Graphics&);
+    void resized() override;
 
 	float fractionOfWindowWidth(float fraction);
 	float fractionOfWindowHeight(float fraction);
@@ -38,57 +44,45 @@ public:
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> feedbackAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> freqAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> resonanceAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> filterMenuAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> reverseAttachment;
 
-	
-
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
-    SimpleDelayAudioProcessor& processor;
-    //Manage parameter state to send to processor
+    
+	Font lapseFont = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
+	Colour textColour = Colour::fromRGB(114, 114, 114);
+	
+	Slider mixValue;
+	Slider feedbackValue;
+	Slider delayTimeValue;
+	ToggleButton reverseButton;
+
+	Label titleLabel;
+
+    LapseAudioProcessor& processor;
+
 	AudioProcessorValueTreeState& state;
+
+	Rectangle<float> nodeField;
 	
-	ChangeBroadcaster& broadcaster;
+	Colour nodeColour[10]{ Colour::fromRGB(64, 94, 221), 
+						   Colour::fromRGB(72, 181, 15),
+						   Colour::fromRGB(239, 29, 129),
+						   Colour::fromRGB(221, 162, 31),
+						   Colour::fromRGB(239, 20, 20),
+						   Colour::fromRGB(64, 94, 221),
+						   Colour::fromRGB(72, 181, 15),
+						   Colour::fromRGB(239, 29, 129),
+						   Colour::fromRGB(221, 162, 31),
+						   Colour::fromRGB(239, 20, 20)};
 
-	//Visual GUI Components
-
-	ComboBox filterMenu;
-	Slider frequencyKnob;
-	Slider resonanceKnob;
-
-	Slider mixKnob;
-	Slider delayTimeKnob;
-	Slider feedbackKnob;
 	
-	DrawableButton reverseButton{ "reverseButton", DrawableButton::ButtonStyle::ImageRaw };
+	float diameter[10] {30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
+	float nodeX[10];
+	float nodeY[10];
+	int nodeCount = 0;
+	int selectedNode = 0;
+	int currentDelayNode = 0;
+	ModifierKeys modKeys;
 
-	Label lapseTitle;
-	Label mixLabel;
-	Label delayTimeLabel;
-	Label feedbackLabel;
-	Label frequencyLabel;
-	Label resonanceLabel;
-	
-	Colour primaryColour = Colour::fromRGB(239, 152, 24);
-	Colour primaryColourLighter = Colour::fromRGB(244, 174, 81);
-
-	Colour secondaryColour = Colour::fromRGB(105, 181, 204);
-	Colour secondaryColourLighter = Colour::fromRGB(158, 202, 219);
-
-	Colour backgroundColour = Colour::fromRGB(249, 212, 157);
-
-	float waveLineThickness = 2.0f;
-
-	LookAndFeel_V4 lf;
-
-	ScopedPointer<Drawable> title = Drawable::createFromImageData(BinaryData::lapse_png, BinaryData::lapse_pngSize);
-	ScopedPointer<Drawable> titleDown = Drawable::createFromImageData(BinaryData::lapseDown_png, BinaryData::lapseDown_pngSize);
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };
-
-

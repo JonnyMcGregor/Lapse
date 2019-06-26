@@ -8,14 +8,11 @@
 
 namespace BinaryData
 {
-    extern const char*   lapse_png;
-    const int            lapse_pngSize = 1077;
-
-    extern const char*   lapseDown_png;
-    const int            lapseDown_pngSize = 1112;
+    extern const char*   RobotoThin_ttf;
+    const int            RobotoThin_ttfSize = 122512;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 2;
+    const int namedResourceListSize = 1;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

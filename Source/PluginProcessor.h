@@ -1,21 +1,10 @@
 /*
   ==============================================================================
 
-    This is a delay plugin with mix, feedback, and delay time parameters.
-    
-    The algorithm was sourced from Daniel Walz's Tape Delay Plugin, can be found
-    at "https://github.com/ffAudio/ffTapeDelay/".  
+    This file was auto-generated!
 
-	Daniel Walz's method breaks the delay process into three functions:
+    It contains the basic framework code for a JUCE plugin processor.
 
-	1. fillDelayBuffer() 
-	2. getFromDelayBuffer()
-	3. feedbackDelay()
-
-	By keeping track of both a readPosition and a writePosition these three functions 
-	can carry out the delay effect. 
-
-	
   ==============================================================================
 */
 
@@ -26,12 +15,12 @@
 //==============================================================================
 /**
 */
-class SimpleDelayAudioProcessor  : public AudioProcessor
+class LapseAudioProcessor  : public AudioProcessor
 {
 public:
     //==============================================================================
-    SimpleDelayAudioProcessor();
-    ~SimpleDelayAudioProcessor();
+    LapseAudioProcessor();
+    ~LapseAudioProcessor();
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -66,49 +55,22 @@ public:
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
-	void updateFilter();
-	//==============================================================================
-	
-	void fillDrawingBuffer(int channel, AudioBuffer<float> &dryBuffer, AudioBuffer<float> &buffer, const int bufferLength);
-
-	std::array<float, 175> audioDataToDraw; //this takes a portion of the audio data to be drawn
-	std::array<float, 175> delayAudioDataToDraw; //this takes a portion of delayed audio data to be drawn
-
 private:
 
-    AudioBuffer<float> delayBuffer; //Buffer to hold delayed audio content
-    AudioBuffer<float> dryBuffer; //Buffer to hold dry content for mix
-	AudioBuffer<float> reverseBuffer; //Buffer to hold reversed content
-
-	int writePosition { 0 }; //Stores the index position of the delay buffer to manage the overlap when writing to output buffer
-	int readPosition { 0 };
-	int lastSampleRate  { 44100 };
-
 	DelayContainer delayContainer = DelayContainer(&writePosition);
+	AudioBuffer<float> delayBuffer, dryBuffer, reverseBuffer;
 
-	
-	//Parameters values that correspond to knobs in UI
 	float* mixParameter = 0;
 	float* delayParameter = 0;
 	float* feedbackParameter = 0;
-	float* frequencyParameter = 0;
-	float* resonanceParameter = 0;
 	float* reverseParameter = 0;
 
-	const StringArray menuChoices{ "Low Pass", "Band Pass", "High Pass" };
-	const StringArray reverseChoices{ "False", "True" };
+	int writePosition = 0;
 
-	// State Variable Filter Object - this is instantiated through a ProcessorDuplicator as the filter processes in mono, the 
-	// ProcessorDuplicator enables stereo processing of the DSP object
-	dsp::ProcessorDuplicator<dsp::StateVariableFilter::Filter<float>, dsp::StateVariableFilter::Parameters<float>> stateVariableFilter;
-	
-	float oldFeedback = 0; //Used for calculating feedback gain, stores previous value of feedbackParameter in feedbackDelay()
+	float oldFeedback = 0;
 
 	AudioProcessorValueTreeState parameters;
 
-	ChangeBroadcaster drawBufferIsFull;
-
     //==============================================================================
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessor)
 };

@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourcompany.SimpleDelay</string>
+    <string>com.yourcompany.Lapse</string>
     <key>CFBundleName</key>
-    <string>SimpleDelay</string>
+    <string>Lapse</string>
     <key>CFBundleDisplayName</key>
-    <string>SimpleDelay</string>
+    <string>Lapse</string>
     <key>CFBundlePackageType</key>
     <string>BNDL</string>
     <key>CFBundleSignature</key>
@@ -29,17 +29,17 @@
     <array>
       <dict>
         <key>name</key>
-        <string>yourcompany: SimpleDelay</string>
+        <string>yourcompany: Lapse</string>
         <key>description</key>
-        <string>SimpleDelay</string>
+        <string>Lapse</string>
         <key>factoryFunction</key>
-        <string>SimpleDelayAUFactory</string>
+        <string>LapseAUFactory</string>
         <key>manufacturer</key>
         <string>Manu</string>
         <key>type</key>
         <string>aufx</string>
         <key>subtype</key>
-        <string>Zerd</string>
+        <string>Mbr6</string>
         <key>version</key>
         <integer>65536</integer>
         <key>resourceUsage</key>
