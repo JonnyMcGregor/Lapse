@@ -27,21 +27,22 @@ public:
     //==============================================================================
 	void setUpAttachments();
 	void paint (Graphics&) override;
+
 	void mouseDoubleClick(const MouseEvent&) override;
 	void mouseDrag(const MouseEvent&) override;
 	
 	void selectNodeForMovement(const MouseEvent&);
-	//void updateNodeSize(const MouseEvent &m, Node&);
 	void updateNodePosition(const MouseEvent &m, Node&);
 
 	void updateFeedbackParameter();
 	void updatePanParameter();
-	void updateMixParameter();
+	//void updateMixParameter();
 	void updateDelayTimeParameter();
 
 	void changeCurrentDelayNode();
 
 	void drawNodeConnectorLines(Graphics&, int i, std::vector<Node>&);
+	void drawBorderOnSelectedNode(Graphics&, Node node);
     void resized() override;
 
 	float multiplyWindowWidth(float multiplyValue);
@@ -91,14 +92,9 @@ private:
 						   Colour::fromRGB(221, 162, 31),
 						   Colour::fromRGB(239, 20, 20)};
 
-	
-	/*float diameter[10] {30, 30, 30, 30, 30, 30, 30, 30, 30, 30};
-	float nodeX[10];
-	float nodeY[10];*/
 	int maximumNodeSize = 80;
 	int defaultNodeSize = 20;
 	int numberOfVisibleNodes = 0;
-	//int selectedNode = 0;
 	int currentDelayNode = 0;
 	ModifierKeys modKeys;
 

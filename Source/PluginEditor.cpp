@@ -57,7 +57,7 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 {
 	//Fills background and draws the static gui elements
     g.fillAll (Colours::white);
-	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), getWidth(),multiplyWindowHeight(0.333f));
+	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), (float)getWidth(),multiplyWindowHeight(0.333f));
 	Rectangle<float> panFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
 	Rectangle<float> timeFontArea = Rectangle<float>(multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
 	
@@ -69,9 +69,8 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 	g.drawText("time", timeFontArea, Justification::centred);
 	g.setColour(textColour.darker());
 	g.setFont(smallFont);
-	g.drawText("L", 45, multiplyWindowHeight(0.6), 45, 45, Justification::topLeft);
-	g.drawText("R", multiplyWindowWidth(0.5) - 45, multiplyWindowHeight(0.6), 45, 45, Justification::topLeft);
-
+	g.drawText("L", 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("R", multiplyWindowWidth(0.5) - 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 
 	g.drawLine(multiplyWindowWidth(0.5), 45, multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), 0.5f);
 
@@ -86,6 +85,25 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 			drawNodeConnectorLines(g, i, timeNodes);
 		}
 	}
+
+	drawBorderOnSelectedNode(g, *selectedNode);
+
+
+}
+
+void LapseAudioProcessorEditor::drawBorderOnSelectedNode(Graphics& g, Node selectedNode)
+{
+	g.setColour(Colours::black);
+	g.drawLine(selectedNode.gradientArea.getX(), selectedNode.gradientArea.getY(), selectedNode.gradientArea.getX() + selectedNode.gradientArea.getWidth() * 0.125f, selectedNode.gradientArea.getY(), 0.5);
+	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getY(), selectedNode.gradientArea.getRight() - selectedNode.gradientArea.getWidth() * 0.125f, selectedNode.gradientArea.getY(), 0.5);
+	g.drawLine(selectedNode.gradientArea.getX(), selectedNode.gradientArea.getY(), selectedNode.gradientArea.getX(), selectedNode.gradientArea.getY() + selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
+	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getY(), selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getY() + selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
+
+	g.drawLine(selectedNode.gradientArea.getX(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getX() + selectedNode.gradientArea.getWidth() * 0.125f, selectedNode.gradientArea.getBottom(), 0.5);
+	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getRight() - selectedNode.gradientArea.getWidth() * 0.125f, selectedNode.gradientArea.getBottom(), 0.5);
+	g.drawLine(selectedNode.gradientArea.getX(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getX(), selectedNode.gradientArea.getBottom() - selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
+	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom() - selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
+
 }
 
 void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::vector<Node>& nodes)
@@ -127,10 +145,8 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 			numberOfVisibleNodes++;
 			repaint();
 		}
-	}
-	processor.parameters.getParameter("numberOfNodes")->beginChangeGesture();
-	processor.parameters.getParameter("numberOfNodes")->setValueNotifyingHost(numberOfVisibleNodes);
-	processor.parameters.getParameter("numberOfNodes")->endChangeGesture();
+	}	
+	selectNodeForMovement(m);
 }
 //===============================================================================================
 
@@ -147,7 +163,7 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 {
 	for (int i = 0; i < numberOfVisibleNodes; i++)
 	{
-		//if mouse-click occurs within the node area, that nodes index is used for movement.
+		//if mouse-click occurs within the node area, that nodes is used for movement.
 
 		if (m.getMouseDownX() < panNodes[i].nodeArea.getRight() && m.getMouseDownX() > panNodes[i].nodeArea.getX() &&
 			m.getMouseDownY() < panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > panNodes[i].nodeArea.getY())
@@ -163,62 +179,44 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 	}
 }
 
-//void LapseAudioProcessorEditor::updateNodeSize(const MouseEvent &m, Node& selectedNode)
-//{
-//	if (selectedNode.getDiameter() < maximumNodeSize)
-//	{
-//		float controlDiameter = selectedNode.getDiameter() - m.getDistanceFromDragStart();
-//		selectedNode.setDiameter(m.getDistanceFromDragStart());
-//
-//		if (selectedNode.getDiameter() < 0)
-//		{
-//			selectedNode.setDiameter(selectedNode.getDiameter() * -1);
-//		}
-//	}
-//
-//	updateFeedbackParameter();
-//}
-
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
 {
 	float newX = m.getDistanceFromDragStartX() + m.getMouseDownX();
 	float newY = m.getDistanceFromDragStartY() + m.getMouseDownY();
 	selectedNode.setXPosition(newX);
 	selectedNode.setYPosition(newY);
-
+	//updateMixParameter();
 	updatePanParameter();
-	updateMixParameter();
 	updateFeedbackParameter();
 	updateDelayTimeParameter();
 }
+
+//================================================================================================
+
+//When updating parameters the values must be scaled between 0 and 1 in order to behave as expected in the plugin host.
+
 void LapseAudioProcessorEditor::updatePanParameter()
 {
-	//Map window X min/max to pan parameter min/max
-	//panValue.setValue(jmap(panNodes[currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f));
+	//Map pan field X min/max to pan parameter min/max
 	pan = jmap(panNodes[currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("panPosition")->beginChangeGesture();
-	//processor.parameters.getParameter("panPosition")->setValueNotifyingHost(panValue.getValue());
 	processor.parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	processor.parameters.getParameter("panPosition")->endChangeGesture();
 }
 
-void LapseAudioProcessorEditor::updateMixParameter()
-{
-	//Map window Y min/max to mix parameter min/max
-	//mixValue.setValue(jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f));
-	mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
-	processor.parameters.getParameter("mix")->beginChangeGesture();
-	//processor.parameters.getParameter("mix")->setValueNotifyingHost(mixValue.getValue());
-	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
-	processor.parameters.getParameter("mix")->endChangeGesture();
-}
+//void LapseAudioProcessorEditor::updateMixParameter()
+//{
+//	//Map pan field Y min/max to mix parameter min/max
+//	mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+//	processor.parameters.getParameter("mix")->beginChangeGesture();
+//	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
+//	processor.parameters.getParameter("mix")->endChangeGesture();
+//}
 
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
-	//feedbackValue.setValue(jmap(timeNodes[currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 2.0f));
-	feedback = jmap(timeNodes[currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 2.0f);
+	feedback = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
 	processor.parameters.getParameter("feedback")->beginChangeGesture();
-	//processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedbackValue.getValue());
 	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	processor.parameters.getParameter("feedback")->endChangeGesture();
 }
@@ -227,25 +225,26 @@ void LapseAudioProcessorEditor::updateDelayTimeParameter()
 {
 	if (currentDelayNode > 1)
 	{
-		/*delayTimeValue.setValue(jmap(timeNodes[currentDelayNode].getXPosition() - timeNodes[currentDelayNode - 1].getXPosition(), 
-									 timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1000.0f));*/
 		delayTime = jmap(timeNodes[currentDelayNode].getXPosition() - timeNodes[currentDelayNode - 1].getXPosition(),
-			timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1000.0f);
+						 timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
 	}
 	else
 	{
-		//delayTimeValue.setValue(jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1000.0f));
-		delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1000.0f);
+		delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
 	}
+
 	processor.parameters.getParameter("delayTime")->beginChangeGesture();
-	//processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTimeValue.getValue());
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	processor.parameters.getParameter("delayTime")->endChangeGesture();
 }
 
 void LapseAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source)
 {
-	//changeCurrentDelayNode();
+	changeCurrentDelayNode();
+	repaint();
+	updatePanParameter();
+	updateFeedbackParameter();
+	updateDelayTimeParameter();
 }
 
 void LapseAudioProcessorEditor::changeCurrentDelayNode()
@@ -253,7 +252,10 @@ void LapseAudioProcessorEditor::changeCurrentDelayNode()
 	if (currentDelayNode < numberOfVisibleNodes)
 		currentDelayNode++;
 	else
-		currentDelayNode == 0;
+		currentDelayNode = 0;
+
+	panNodes[currentDelayNode].isDelayNode = true;
+	timeNodes[currentDelayNode].isDelayNode = true;
 }
 
 float  LapseAudioProcessorEditor::multiplyWindowWidth(float fraction)

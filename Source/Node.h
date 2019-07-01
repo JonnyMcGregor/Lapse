@@ -31,7 +31,7 @@ public:
 	bool isDelayNode = false;
 	bool isSelectedForMovement = false;
 	Rectangle<float> nodeArea;
-
+	Rectangle<float> gradientArea;
 private:
 
 	float diameter = 0;

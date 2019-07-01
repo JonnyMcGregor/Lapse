@@ -43,11 +43,6 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	0,
 																	1,
 																	0.5),
-							 std::make_unique<AudioParameterInt>("numberOfNodes",
-																   "Number of Nodes",
-																	0,
-																	10,
-																	1),
 							 std::make_unique<AudioParameterBool>("isReversing",
 																  "Is Reversing",
 																  false,
@@ -136,7 +131,7 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 	const int numberInputChannels = getTotalNumInputChannels();
-	const int delayBufferSize = 2 * (sampleRate + samplesPerBlock);
+	const int delayBufferSize = 2.0f * (sampleRate + samplesPerBlock);
 
 	delayBuffer.setSize(numberInputChannels, delayBufferSize);
 	dryBuffer.setSize(numberInputChannels, samplesPerBlock);
