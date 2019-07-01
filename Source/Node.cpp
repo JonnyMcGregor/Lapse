@@ -10,12 +10,12 @@
 
 #include "Node.h"
 
-Node::Node(float xPosition, float yPosition, float nodeDiameter, Colour nodeColour)
+Node::Node(float xPosition, float yPosition, float nodeDiameter, Colour colourOfNode)
 {
 	xPos = xPosition;
 	yPos = yPosition;
 	diameter = nodeDiameter;
-	outlineColour = nodeColour;
+	nodeColour = colourOfNode;
 }
 
 Node::~Node()
@@ -23,14 +23,62 @@ Node::~Node()
 
 }
 
-void Node::paint(Graphics& g)
+void Node::drawNode(Graphics& g)
 {
-	Rectangle<float> nodeArea = Rectangle<float>(xPos, yPos, diameter, diameter);
-	g.setColour(outlineColour);
-	g.drawEllipse(nodeArea, 0.5);
+	nodeArea = Rectangle<float>(xPos - (diameter / 2), yPos - (diameter / 2), diameter, diameter);
+	Rectangle<float> gradientArea = Rectangle<float>(xPos - diameter, yPos - diameter, diameter * 2, diameter * 2);
+	Point<float> endOfGradient = Point<float>(gradientArea.getX() + nodeArea.getWidth(), gradientArea.getY());
+	ColourGradient gradient = ColourGradient(nodeColour, nodeArea.getCentre(), Colours::transparentWhite, endOfGradient, true);
+
+	if (isDelayNode)
+		g.setColour(nodeColour.brighter());
+	else
+		g.setColour(nodeColour);
+
+	g.drawEllipse(nodeArea, 2.0f);
+	g.setGradientFill(gradient);
+	g.fillEllipse(gradientArea);
 }
 
-void Node::resized()
+void Node::setDiameter(float newDiameterValue)
 {
-	
+	diameter = newDiameterValue;
+}
+
+void Node::setXPosition(float newXPos)
+{
+	xPos = newXPos;
+}
+
+void Node::setYPosition(float newYPos)
+{
+	yPos = newYPos;
+}
+
+void Node::setColour(Colour newColour)
+{
+	nodeColour = newColour;
+}
+float Node::getDiameter()
+{
+	return diameter;
+}
+
+float Node::getRadius()
+{
+	return diameter * 0.5f;
+}
+float Node::getXPosition()
+{
+	return xPos;
+}
+
+float Node::getYPosition()
+{
+	return yPos;
+}
+
+Colour Node::getColour()
+{
+	return nodeColour;
 }

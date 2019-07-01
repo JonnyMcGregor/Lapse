@@ -10,19 +10,33 @@
 
 #pragma once
 #include "../JuceLibraryCode/JuceHeader.h"
-class Node : public Component
+class Node
 {
 public:
 	Node(float xPosition, float yPosition, float nodeDiameter, Colour nodeColour);
 	~Node();
-	void paint(Graphics&) override;
-	void resized() override;
 	
+	void drawNode(Graphics& g);
+
+	void setDiameter(float newDiameterValue);
+	void setXPosition(float newXPos);
+	void setYPosition(float newYPos);
+	void setColour(Colour newColour);
+	float getDiameter();
+	float getRadius();
+	float getXPosition();
+	float getYPosition();
+	Colour getColour();
+
+	bool isDelayNode = false;
+	bool isSelectedForMovement = false;
+	Rectangle<float> nodeArea;
+
 private:
 
 	float diameter = 0;
 	float xPos = 0;
 	float yPos = 0;
-	Colour outlineColour;
-	Colour fillColour;
+
+	Colour nodeColour;
 };

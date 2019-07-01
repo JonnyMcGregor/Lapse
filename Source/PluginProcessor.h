@@ -12,10 +12,12 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DelayContainer.h"
+
 //==============================================================================
 /**
 */
 class LapseAudioProcessor  : public AudioProcessor
+
 {
 public:
     //==============================================================================
@@ -31,6 +33,7 @@ public:
    #endif
 
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
+	void calculateNoteLengths();
 	void panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue);
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
@@ -57,6 +60,11 @@ public:
 
 	AudioProcessorValueTreeState parameters;
 
+	double bpm = 0;
+	int timeSigNumerator = 4;
+	int currentBeat = 0;
+
+
 private:
 
 	DelayContainer delayContainer = DelayContainer(&writePosition);
@@ -71,7 +79,15 @@ private:
 
 	float oldFeedback = 0;
 
+	const double pi = 3.141592654;
+	
+	float wholeNoteInSeconds, halfNoteInSeconds, quarterNoteInSeconds, 
+		  eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
 
+	AudioPlayHead* playHead;
+	AudioPlayHead::CurrentPositionInfo playposinfo;
+
+	ChangeBroadcaster firstBeatOfBar;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessor)
 };

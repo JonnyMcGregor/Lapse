@@ -88,7 +88,7 @@ void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverse
 	begin copying from. The data stored within the delayBuffer is then copied back into
 	the main buffer which creates a single delay.
 */
-void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, int delayTime)
+void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float delayTime)
 {
 	int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
 

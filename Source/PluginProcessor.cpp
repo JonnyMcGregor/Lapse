@@ -21,7 +21,7 @@ LapseAudioProcessor::LapseAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), 
+                       ),
 	parameters(*this, nullptr, Identifier("SimpleDelay"),
 						   { std::make_unique<AudioParameterFloat>("mix",             // parameter id
 																   "Mix",             // parameter name
@@ -32,7 +32,7 @@ LapseAudioProcessor::LapseAudioProcessor()
 																   "Delay Time",
 																   0.0f,
 																   1000.0f,
-																   200.0f),
+																   0.0f),
 							 std::make_unique<AudioParameterFloat>("feedback",
 																  "Feedback",
 																   0,
@@ -43,6 +43,11 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	0,
 																	1,
 																	0.5),
+							 std::make_unique<AudioParameterInt>("numberOfNodes",
+																   "Number of Nodes",
+																	0,
+																	10,
+																	1),
 							 std::make_unique<AudioParameterBool>("isReversing",
 																  "Is Reversing",
 																  false,
@@ -183,14 +188,29 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
 	
+
+	playHead = getPlayHead();
+	if (playHead != nullptr)
+	{
+		playHead->getCurrentPosition(playposinfo);
+		bpm = playposinfo.bpm;
+		timeSigNumerator = playposinfo.timeSigNumerator;
+		currentBeat = playposinfo.ppqPosition;
+		if (currentBeat == 1)
+		{
+			firstBeatOfBar.sendChangeMessage();
+		}
+		calculateNoteLengths();
+	}
+
 	const int bufferLength = buffer.getNumSamples();
 	const int delayBufferLength = delayBuffer.getNumSamples();
 
-	int delayTime = *delayParameter;
+	float delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
 	float panValue = *panParameter;
 	bool isReverseEffect = *reverseParameter;
-
+	
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
 		delayContainer.fillDryBuffer(channel, buffer, dryBuffer);
@@ -217,14 +237,27 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	writePosition %= delayBufferLength;
 }
 
+void LapseAudioProcessor::calculateNoteLengths()
+{
+	if (playposinfo.timeSigDenominator % 2 == 0)
+	{
+		quarterNoteInSeconds = 60 / bpm;
+		halfNoteInSeconds = quarterNoteInSeconds * 2;
+		wholeNoteInSeconds = halfNoteInSeconds * 2;
+		eighthNoteInSeconds = quarterNoteInSeconds * 0.5;
+		sixteenthNoteInSeconds = eighthNoteInSeconds * 0.5;
+		thirtySecondNoteInSeconds = sixteenthNoteInSeconds * 0.5;
+	}
+}
+
 void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue)
 {
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
-		if (channel == 1)
-			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * panValue);
+		if (channel == 0)
+			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * cos(panValue*pi/2));
 		else
-			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * (1 - panValue));
+			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * sin(panValue*pi/2));
 	}
 }
 //==============================================================================
@@ -235,7 +268,7 @@ bool LapseAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* LapseAudioProcessor::createEditor()
 {
-    return new LapseAudioProcessorEditor (*this, parameters);
+    return new LapseAudioProcessorEditor (*this, parameters, firstBeatOfBar);
 }
 
 //==============================================================================
