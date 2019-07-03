@@ -7,9 +7,11 @@ How to use:
 1. Add Lapse to a track in your chosen DAW.
 
 2. Double click to create a delay node.
+
 ![CreateNode](Resources/LapseCreateNode.gif)
 
 3. Click and drag on a node to change parameter values.
+
 ![MoveNode](Resources/LapseMoveNode.gif)
 
 To install on MacOSX:
