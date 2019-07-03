@@ -22,4 +22,10 @@ To install on MacOSX:
 
 3. Copy the VST into your plugin folder for your chosen DAW.
 
-4. Launch VST within chosen DAW and enjoy Lapse!
+4. Launch VST within chosen DAW
+
+To install on Windows:
+
+1. Copy either the Lapse.dll (vst2) or Lapse.vst (vst3) from the Builds/Windows folder into the vst folder of your chosen DAW.
+
+2. Launch VST within chosen DAW
