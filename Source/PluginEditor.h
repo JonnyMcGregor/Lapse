@@ -33,7 +33,7 @@ public:
 	
 	void selectNodeForMovement(const MouseEvent&);
 	void updateNodePosition(const MouseEvent &m, Node&);
-
+	void keepNodeInField(float&, float&, Node selecedNode);
 	void updateFeedbackParameter();
 	void updatePanParameter();
 	//void updateMixParameter();
@@ -105,7 +105,7 @@ private:
 
 	std::vector<Node> panNodes;
 	std::vector<Node> timeNodes;
-	Node *selectedNode;
+	Node *selectedNode = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };

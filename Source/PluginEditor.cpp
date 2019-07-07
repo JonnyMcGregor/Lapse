@@ -61,16 +61,20 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 	Rectangle<float> panFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
 	Rectangle<float> timeFontArea = Rectangle<float>(multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
 	
+
 	g.setColour(textColour);
     g.setFont (largeFont);
     g.drawText ("lapse.", titleFontArea, Justification::centred);
 	g.setFont(mediumFont);
 	g.drawText("pan", panFontArea, Justification::centred);
 	g.drawText("time", timeFontArea, Justification::centred);
+
 	g.setColour(textColour.darker());
 	g.setFont(smallFont);
 	g.drawText("L", 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("R", multiplyWindowWidth(0.5) - 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("0ms", multiplyWindowWidth(0.5) + 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("1000ms", getWidth() - 90.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
 
 	g.drawLine(multiplyWindowWidth(0.5), 45, multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), 0.5f);
 
@@ -85,8 +89,10 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 			drawNodeConnectorLines(g, i, timeNodes);
 		}
 	}
-
-	drawBorderOnSelectedNode(g, *selectedNode);
+	if (selectedNode != nullptr)
+	{
+		drawBorderOnSelectedNode(g, *selectedNode);
+	}
 
 
 }
@@ -120,14 +126,12 @@ void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::
 void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 {
 	
-	
 	//Prevents panNodes from being created outside of panNodeField
 	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
 		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
 	{
 		if (numberOfVisibleNodes < 10)
 		{
-			numberOfVisibleNodes++;
 			panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[panNodes.size()]));
 			timeNodes.push_back(Node(timeNodeField.getX() + (numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[timeNodes.size()]));
 			repaint();
@@ -139,18 +143,17 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	{
 		if (numberOfVisibleNodes < 10)
 		{
-			timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[panNodes.size()]));
-			panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[timeNodes.size()]));
-
-			numberOfVisibleNodes++;
+			timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[timeNodes.size()]));
+			panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[panNodes.size()]));
 			repaint();
 		}
 	}	
+	numberOfVisibleNodes++;
 	selectNodeForMovement(m);
 }
 //===============================================================================================
 
-//Node positions and size are changed on mouseDrag().
+//Node positions are changed on mouseDrag().
 
 void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
 {
@@ -169,31 +172,70 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 			m.getMouseDownY() < panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > panNodes[i].nodeArea.getY())
 		{
 			selectedNode = &panNodes[i];
+			selectedNode->isPanNode = true;
+			selectedNode->isTimeNode = false;
 		}
 
 		if (m.getMouseDownX() < timeNodes[i].nodeArea.getRight() && m.getMouseDownX() > timeNodes[i].nodeArea.getX() &&
 			m.getMouseDownY() < timeNodes[i].nodeArea.getBottom() && m.getMouseDownY() > timeNodes[i].nodeArea.getY())
 		{
 			selectedNode = &timeNodes[i];
+			selectedNode->isTimeNode = true;
+			selectedNode->isPanNode = false;
 		}
 	}
 }
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
 {
-	float newX = m.getDistanceFromDragStartX() + m.getMouseDownX();
-	float newY = m.getDistanceFromDragStartY() + m.getMouseDownY();
-	selectedNode.setXPosition(newX);
-	selectedNode.setYPosition(newY);
-	//updateMixParameter();
-	updatePanParameter();
-	updateFeedbackParameter();
-	updateDelayTimeParameter();
+	//This condition prevents nodes from being moved outside of the nodeField rectangles.
+	//I resent this if statement. Needs to be revisited but does the job.
+
+		float newX = m.getDistanceFromDragStartX() + m.getMouseDownX();
+		float newY = m.getDistanceFromDragStartY() + m.getMouseDownY();
+		
+		keepNodeInField(newX, newY, selectedNode);
+
+		selectedNode.setXPosition(newX);
+		selectedNode.setYPosition(newY);
+		//updateMixParameter();
+		updatePanParameter();
+		updateFeedbackParameter();
+		updateDelayTimeParameter();
+	
+	
 }
 
 //================================================================================================
 
 //When updating parameters the values must be scaled between 0 and 1 in order to behave as expected in the plugin host.
+
+void LapseAudioProcessorEditor::keepNodeInField(float &newX, float &newY, Node selectedNode)
+{
+	if (selectedNode.isPanNode)
+	{
+		if (newX > panNodeField.getRight())
+			newX = panNodeField.getRight();
+		if (newX < panNodeField.getX())
+			newX = panNodeField.getX();
+		if (newY > panNodeField.getBottom())
+			newY = panNodeField.getBottom();
+		if (newY < panNodeField.getY())
+			newY = panNodeField.getY();
+
+	}
+	else if (selectedNode.isTimeNode)
+	{
+		if (newX > timeNodeField.getRight())
+			newX = timeNodeField.getRight();
+		if (newX < timeNodeField.getX())
+			newX = timeNodeField.getX();
+		if (newY > timeNodeField.getBottom())
+			newY = timeNodeField.getBottom();
+		if (newY < timeNodeField.getY())
+			newY = timeNodeField.getY();
+	}
+}
 
 void LapseAudioProcessorEditor::updatePanParameter()
 {
