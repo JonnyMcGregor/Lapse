@@ -10,8 +10,6 @@ In Lapse's current state of development, the following main tasks are yet to be 
 	
 	Mapping of Delay Time to time intervals relative to bpm and time signature of DAW.
 
-	Confining node position to their designated parameter areas
-
 	Reverse effect determined by relative position of previous node in time area.
 
 	Saving node parameters after closing GUI in DAW.
