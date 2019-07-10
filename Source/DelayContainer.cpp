@@ -141,8 +141,8 @@ void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer
 void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter)
 {
 	for (int sample = 0; sample < sourceBufferSize; sample++)
-	{									 /*-------------------------- DRY_MIX -------------------------------- + ------------------------ WET_MIX -------------------------- MEAN*/
-		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (1 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * mixParameter)) / 2.0f);
+	{									 /*-------------------------- DRY_MIX -------------------------------- + ------------------------ WET_MIX ----------------------*/
+		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (1 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * mixParameter)));
 	}
 }
 

@@ -31,13 +31,13 @@ LapseAudioProcessor::LapseAudioProcessor()
 							 std::make_unique<AudioParameterFloat>("delayTime",
 																   "Delay Time",
 																   0.0f,
-																   1000.0f,
-																   0.0f),
+																   2000.0f,
+																   1000.0f),
 							 std::make_unique<AudioParameterFloat>("feedback",
 																  "Feedback",
 																   0,
-																   2.0,
-																   1.0),
+																   1.0,
+																   0.5),
 							 std::make_unique<AudioParameterFloat>("panPosition",
 																   "Pan",
 																	0,
@@ -46,7 +46,10 @@ LapseAudioProcessor::LapseAudioProcessor()
 							 std::make_unique<AudioParameterBool>("isReversing",
 																  "Is Reversing",
 																  false,
-																  "isReversing")
+																  "isReversing"),
+							 std::make_unique<AudioParameterBool>("timeMode",
+																  "Snap Delay Time",
+																  false)
 							 
 						   })
 
@@ -57,6 +60,7 @@ LapseAudioProcessor::LapseAudioProcessor()
 	feedbackParameter = parameters.getRawParameterValue("feedback");
 	reverseParameter = parameters.getRawParameterValue("isReversing");
 	panParameter = parameters.getRawParameterValue("panPosition");
+	timeModeParameter = parameters.getRawParameterValue("timeMode");
 }
 
 LapseAudioProcessor::~LapseAudioProcessor()

@@ -64,6 +64,8 @@ public:
 	int timeSigNumerator = 4;
 	int currentBeat = 0;
 
+	float wholeNoteInSeconds, halfNoteInSeconds, quarterNoteInSeconds,
+		eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
 
 private:
 
@@ -75,14 +77,12 @@ private:
 	float* feedbackParameter = 0;
 	float* reverseParameter = 0;
 	float* panParameter = 0;
+	float* timeModeParameter = 0;
 	int writePosition = 0;
 
 	float oldFeedback = 0;
 
 	const double pi = 3.141592654;
-	
-	float wholeNoteInSeconds, halfNoteInSeconds, quarterNoteInSeconds, 
-		  eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
 
 	AudioPlayHead* playHead;
 	AudioPlayHead::CurrentPositionInfo playposinfo;

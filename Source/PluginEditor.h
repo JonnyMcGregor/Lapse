@@ -14,6 +14,7 @@
 #include "PluginProcessor.h"
 #include "Node.h"
 #include <vector>
+#include <cmath>
 
 //==============================================================================
 /**
@@ -39,23 +40,18 @@ public:
 	//void updateMixParameter();
 	void updateDelayTimeParameter();
 
+	float quantisePosition(float position, float noteLengthInMS);
+
 	void changeCurrentDelayNode();
 
+	void drawQuantiseGrid(Graphics&);
 	void drawNodeConnectorLines(Graphics&, int i, std::vector<Node>&);
 	void drawBorderOnSelectedNode(Graphics&, Node node);
     void resized() override;
-
-	float multiplyWindowWidth(float multiplyValue);
-	float multiplyWindowHeight(float multiplyValue);
-
+	
 	void changeListenerCallback(ChangeBroadcaster *source) override;
 
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mixAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> feedbackAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> panAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> nodeCountAttachment;
-	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> reverseAttachment;
+	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> timeModeAttachment;
 
 private:
 	ChangeBroadcaster& broadcaster;
@@ -65,12 +61,7 @@ private:
 	
 	Colour textColour = Colour::fromRGB(114, 114, 114);
 	
-	Slider mixValue;
-	Slider feedbackValue;
-	Slider delayTimeValue;
-	Slider panValue;
-
-	ToggleButton reverseButton;
+	ToggleButton quantiseButton;
 
 	Label titleLabel;
 

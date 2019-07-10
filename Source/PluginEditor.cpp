@@ -21,35 +21,36 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	mediumFont.setHeight(25);
 	smallFont.setHeight(15);
 	
+	quantiseButton.setColour(ToggleButton::ColourIds::textColourId, textColour);
+	quantiseButton.setColour(ToggleButton::ColourIds::tickColourId, textColour);
+	quantiseButton.setColour(ToggleButton::ColourIds::tickDisabledColourId, textColour.darker());
+	quantiseButton.setButtonText("Quantise");
+	addAndMakeVisible(&quantiseButton);
 
 	setSize(800, 500);
 	
-	panNodeField = Rectangle<float>(30, 45, multiplyWindowWidth(0.5f) - 45, multiplyWindowHeight(0.666f) - 45);
-	timeNodeField = Rectangle<float>(multiplyWindowWidth(0.5) + 15, 45, multiplyWindowWidth(0.5f) - 45, multiplyWindowHeight(0.666f) - 45);
+	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 
-	/*panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
-	timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));*/
-
-	//setUpAttachments();
-    
-   
+	panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
+	timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
+	numberOfVisibleNodes++;
+	
+	setUpAttachments();
 }
 
 LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 {
 }
+
 void LapseAudioProcessorEditor::setUpAttachments()
 {
-	mixAttachment.reset(new AudioProcessorValueTreeState::SliderAttachment(state, "mix", mixValue));
-	delayTimeAttachment.reset(new AudioProcessorValueTreeState::SliderAttachment(state, "delayTime", delayTimeValue));
-	feedbackAttachment.reset(new AudioProcessorValueTreeState::SliderAttachment(state, "feedback", feedbackValue));
-	panAttachment.reset(new AudioProcessorValueTreeState::SliderAttachment(state, "panPosition", panValue));
-	reverseAttachment.reset(new AudioProcessorValueTreeState::ButtonAttachment(state, "isReversing", reverseButton));
+	timeModeAttachment.reset(new AudioProcessorValueTreeState::ButtonAttachment(state, "timeMode", quantiseButton));
 }
 
 void LapseAudioProcessorEditor::resized()
 {
-
+	quantiseButton.setBounds(proportionOfWidth(0.75), proportionOfHeight(0.8), 120, 50);
 }
 
 //==============================================================================
@@ -57,26 +58,31 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 {
 	//Fills background and draws the static gui elements
     g.fillAll (Colours::white);
-	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), (float)getWidth(),multiplyWindowHeight(0.333f));
-	Rectangle<float> panFontArea = Rectangle<float>(0.0f, multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
-	Rectangle<float> timeFontArea = Rectangle<float>(multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), multiplyWindowWidth(0.5), multiplyWindowHeight(0.0625f));
+	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), (float)getWidth(),proportionOfHeight(0.333f));
+	Rectangle<float> panFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
+	Rectangle<float> timeFontArea = Rectangle<float>(proportionOfWidth(0.5f), proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
 	
-
 	g.setColour(textColour);
     g.setFont (largeFont);
     g.drawText ("lapse.", titleFontArea, Justification::centred);
+
 	g.setFont(mediumFont);
 	g.drawText("pan", panFontArea, Justification::centred);
 	g.drawText("time", timeFontArea, Justification::centred);
 
 	g.setColour(textColour.darker());
 	g.setFont(smallFont);
-	g.drawText("L", 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("R", multiplyWindowWidth(0.5) - 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("0ms", multiplyWindowWidth(0.5) + 45.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("1000ms", getWidth() - 90.0f, multiplyWindowHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
+	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("1000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
 
-	g.drawLine(multiplyWindowWidth(0.5), 45, multiplyWindowWidth(0.5f), multiplyWindowHeight(0.666f), 0.5f);
+	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
+
+	if (quantiseButton.getToggleState() == true)
+	{
+		drawQuantiseGrid(g);
+	}
 
 	//Draws nodes and node connector lines
 	for (int i = 0; i < panNodes.size(); i++)
@@ -89,6 +95,7 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 			drawNodeConnectorLines(g, i, timeNodes);
 		}
 	}
+
 	if (selectedNode != nullptr)
 	{
 		drawBorderOnSelectedNode(g, *selectedNode);
@@ -97,6 +104,15 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 
 }
 
+void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
+{
+	float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
+	for (int xPos = timeNodeField.getX(); xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
+	{
+		g.setColour(textColour);
+		g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
+	}
+}
 void LapseAudioProcessorEditor::drawBorderOnSelectedNode(Graphics& g, Node selectedNode)
 {
 	g.setColour(Colours::black);
@@ -188,13 +204,15 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
 {
-	//This condition prevents nodes from being moved outside of the nodeField rectangles.
-	//I resent this if statement. Needs to be revisited but does the job.
-
 		float newX = m.getDistanceFromDragStartX() + m.getMouseDownX();
 		float newY = m.getDistanceFromDragStartY() + m.getMouseDownY();
 		
 		keepNodeInField(newX, newY, selectedNode);
+
+		if (selectedNode.isTimeNode && quantiseButton.getToggleState() == true)
+		{
+			newX = quantisePosition(newX, (processor.sixteenthNoteInSeconds*1000));
+		}
 
 		selectedNode.setXPosition(newX);
 		selectedNode.setYPosition(newY);
@@ -202,13 +220,12 @@ void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& se
 		updatePanParameter();
 		updateFeedbackParameter();
 		updateDelayTimeParameter();
-	
-	
 }
 
-//================================================================================================
+//=========================================================================================
+//This ensures that the nodes stay within their designated areas
 
-//When updating parameters the values must be scaled between 0 and 1 in order to behave as expected in the plugin host.
+//TODO: Create a better system for this. 
 
 void LapseAudioProcessorEditor::keepNodeInField(float &newX, float &newY, Node selectedNode)
 {
@@ -236,6 +253,19 @@ void LapseAudioProcessorEditor::keepNodeInField(float &newX, float &newY, Node s
 			newY = timeNodeField.getY();
 	}
 }
+//================================================================================================
+//This quantises the position of a node so that when it is translated to an audio parameter, 
+//it will be synchronised to the DAW.
+
+float LapseAudioProcessorEditor::quantisePosition(float position, float noteLengthInMS)
+{
+	float noteLengthMappedToXAxis = jmap(noteLengthInMS, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
+	position = (round((position - timeNodeField.getX()) / noteLengthMappedToXAxis) * noteLengthMappedToXAxis) + timeNodeField.getX();
+	return position;
+}
+//================================================================================================
+
+//When updating parameters the values must be scaled between 0 and 1 in order to behave as expected in the plugin host.
 
 void LapseAudioProcessorEditor::updatePanParameter()
 {
@@ -300,14 +330,5 @@ void LapseAudioProcessorEditor::changeCurrentDelayNode()
 	timeNodes[currentDelayNode].isDelayNode = true;
 }
 
-float  LapseAudioProcessorEditor::multiplyWindowWidth(float fraction)
-{
-	return getWidth() * fraction;
-}
-
-float  LapseAudioProcessorEditor::multiplyWindowHeight(float fraction)
-{
-	return getHeight() * fraction;
-}
 
 
