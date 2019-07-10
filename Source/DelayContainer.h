@@ -5,6 +5,14 @@
     Created: 14 May 2019 4:13:06pm
     Author:  jonny
 
+	This DelayContainer class was heavily based off Daniel Walz's ffTapeDelay algorithm.
+
+	Link: https://github.com/ffAudio/ffTapeDelay
+
+	I essentially placed it into its own class and added a few extra functions such as 
+	reverseDelayBuffer() and mixBuffers(). Ideally I would like to expand on this class
+	in the future to add some more wacky delay effects.
+
   ==============================================================================
 */
 
