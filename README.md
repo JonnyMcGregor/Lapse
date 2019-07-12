@@ -1,9 +1,12 @@
 ![SplashScreen](Resources/Lapse_3rd_Sprint.png)
 
+### Overview:
+
 Lapse is a node-based delay plugin designed to visually represent delay in an interactive way. Lapse will allow you to create awesome delays through automating delay time, feedback, and panning parameters through its intuitive user interface.
 
-### Current State:
 ------------------
+
+### Current State:
 
 In Lapse's current state of development, the following main tasks are yet to be implemented:
 
@@ -14,6 +17,8 @@ In Lapse's current state of development, the following main tasks are yet to be 
 	Reverse effect determined by relative position of previous node in time area.
 
 	Saving node parameters after closing GUI in DAW.
+
+------------------
 
 How to use:
 
@@ -26,6 +31,8 @@ How to use:
 3. Click and drag on a node to change parameter values.
 
 ![MoveNode](Resources/LapseMoveNode.gif)
+
+------------------
 
 To install on MacOSX:
 
