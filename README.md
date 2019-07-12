@@ -2,7 +2,8 @@
 
 Lapse is a node-based delay plugin designed to visually represent delay in an interactive way. Lapse will allow you to create awesome delays through automating delay time, feedback, and panning parameters through its intuitive user interface.
 
-###Current State:
+### Current State:
+------------------
 
 In Lapse's current state of development, the following main tasks are yet to be implemented:
 
