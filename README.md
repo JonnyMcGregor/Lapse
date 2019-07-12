@@ -20,7 +20,7 @@ In Lapse's current state of development, the following main tasks are yet to be 
 
 ------------------
 
-How to use:
+### How to use:
 
 1. Add Lapse to a track in your chosen DAW.
 
@@ -34,7 +34,7 @@ How to use:
 
 ------------------
 
-To install on MacOSX:
+### To install on MacOSX:
 
 1. Open the XCode project in Builds/MacOSX. 
 
@@ -44,7 +44,7 @@ To install on MacOSX:
 
 4. Launch VST within chosen DAW
 
-To install on Windows:
+### To install on Windows:
 
 1. Copy either the Lapse.dll (vst2) or Lapse.vst (vst3) from the Builds/Windows folder into the vst folder of your chosen DAW.
 
