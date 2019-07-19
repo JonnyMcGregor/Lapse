@@ -16,7 +16,7 @@
 //==============================================================================
 /**
 */
-class LapseAudioProcessor  : public AudioProcessor
+class LapseAudioProcessor  : public AudioProcessor, public Timer
 
 {
 public:
@@ -27,7 +27,7 @@ public:
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
-
+	void timerCallback() override;
    #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
@@ -64,8 +64,10 @@ public:
 	int timeSigNumerator = 4;
 	int currentBeat = 0;
 
-	float wholeNoteInSeconds, halfNoteInSeconds, quarterNoteInSeconds,
+	
+	float twoBarsInSeconds, oneBarInSeconds, halfNoteInSeconds, quarterNoteInSeconds,
 		eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
+	
 
 private:
 
@@ -78,6 +80,11 @@ private:
 	float* reverseParameter = 0;
 	float* panParameter = 0;
 	float* timeModeParameter = 0;
+	float* timerInterval = 0;
+
+	float *timerValues[4]{ &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds, &twoBarsInSeconds};
+
+	float oldTimerValue = 0;
 	int writePosition = 0;
 
 	float oldFeedback = 0;

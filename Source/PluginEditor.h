@@ -52,6 +52,7 @@ public:
 	void changeListenerCallback(ChangeBroadcaster *source) override;
 
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> timeModeAttachment;
+	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> nodeTimingBoxAttachment;
 
 private:
 	ChangeBroadcaster& broadcaster;
@@ -62,6 +63,8 @@ private:
 	Colour textColour = Colour::fromRGB(114, 114, 114);
 	
 	ToggleButton quantiseButton;
+
+	ComboBox nodeTimingBox;
 
 	Label titleLabel;
 
@@ -97,6 +100,7 @@ private:
 	std::vector<Node> panNodes;
 	std::vector<Node> timeNodes;
 	Node *selectedNode = nullptr;
+	
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };

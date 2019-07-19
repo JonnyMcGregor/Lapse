@@ -31,9 +31,10 @@ void Node::drawNode(Graphics& g)
 	ColourGradient gradient = ColourGradient(nodeColour, nodeArea.getCentre(), Colours::transparentWhite, endOfGradient, true);
 
 	if (isDelayNode)
-		g.setColour(Colours::white);
-	else
 		g.setColour(nodeColour);
+
+	else
+		g.setColour(Colours::white);
 
 	g.drawEllipse(nodeArea, 2.0f);
 	g.setGradientFill(gradient);

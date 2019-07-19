@@ -47,9 +47,15 @@ LapseAudioProcessor::LapseAudioProcessor()
 																  "Is Reversing",
 																  false,
 																  "isReversing"),
-							 std::make_unique<AudioParameterBool>("timeMode",
-																  "Snap Delay Time",
-																  false)
+							 std::make_unique<AudioParameterBool>("quantiseDelayTime",
+																  "Quantise Delay Time",
+																  false),
+							 std::make_unique<AudioParameterFloat>("timerValue",
+																	"Node Change Time",
+																	1,
+																	5,
+																	1
+																  )
 							 
 						   })
 
@@ -60,7 +66,8 @@ LapseAudioProcessor::LapseAudioProcessor()
 	feedbackParameter = parameters.getRawParameterValue("feedback");
 	reverseParameter = parameters.getRawParameterValue("isReversing");
 	panParameter = parameters.getRawParameterValue("panPosition");
-	timeModeParameter = parameters.getRawParameterValue("timeMode");
+	timeModeParameter = parameters.getRawParameterValue("quantiseDelayTime");
+	timerInterval = parameters.getRawParameterValue("timerValue");
 }
 
 LapseAudioProcessor::~LapseAudioProcessor()
@@ -146,6 +153,17 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 	reverseBuffer.clear();
 
 	delayContainer.initialise(sampleRate, samplesPerBlock, delayBufferSize);
+
+	playHead = getPlayHead();
+	if (playHead != nullptr)
+	{
+		playHead->getCurrentPosition(playposinfo);
+		bpm = playposinfo.bpm;
+		timeSigNumerator = playposinfo.timeSigNumerator;
+		currentBeat = playposinfo.ppqPosition;
+		calculateNoteLengths();
+	}
+	startTimer(halfNoteInSeconds*1000);
 }
 
 void LapseAudioProcessor::releaseResources()
@@ -183,10 +201,8 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
-	
 
 	playHead = getPlayHead();
 	if (playHead != nullptr)
@@ -195,12 +211,9 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		bpm = playposinfo.bpm;
 		timeSigNumerator = playposinfo.timeSigNumerator;
 		currentBeat = playposinfo.ppqPosition;
-		if (currentBeat == 1)
-		{
-			firstBeatOfBar.sendChangeMessage();
-		}
 		calculateNoteLengths();
 	}
+	
 
 	const int bufferLength = buffer.getNumSamples();
 	const int delayBufferLength = delayBuffer.getNumSamples();
@@ -232,6 +245,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		
 		oldFeedback = feedback;
     }
+
 	writePosition += bufferLength;
 	writePosition %= delayBufferLength;
 }
@@ -242,7 +256,8 @@ void LapseAudioProcessor::calculateNoteLengths()
 	{
 		quarterNoteInSeconds = 60 / bpm;
 		halfNoteInSeconds = quarterNoteInSeconds * 2;
-		wholeNoteInSeconds = halfNoteInSeconds * 2;
+		oneBarInSeconds = halfNoteInSeconds * 2;
+		twoBarsInSeconds = oneBarInSeconds * 2;
 		eighthNoteInSeconds = quarterNoteInSeconds * 0.5;
 		sixteenthNoteInSeconds = eighthNoteInSeconds * 0.5;
 		thirtySecondNoteInSeconds = sixteenthNoteInSeconds * 0.5;
@@ -258,6 +273,16 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 		else
 			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * sin(panValue*pi/2));
 	}
+}
+
+void LapseAudioProcessor::timerCallback()
+{
+	if (oldTimerValue != *timerValues[(int)*timerInterval])
+	{
+		startTimer(*timerValues[(int)*timerInterval] * 1000);
+		oldTimerValue = *timerValues[(int)*timerInterval];
+	}
+	firstBeatOfBar.sendChangeMessage();
 }
 //==============================================================================
 bool LapseAudioProcessor::hasEditor() const

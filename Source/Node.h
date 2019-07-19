@@ -32,6 +32,7 @@ public:
 	bool isSelectedForMovement = false;
 	bool isPanNode = false;
 	bool isTimeNode = false;
+
 	Rectangle<float> nodeArea;
 	Rectangle<float> gradientArea;
 private:

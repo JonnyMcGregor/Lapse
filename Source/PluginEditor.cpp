@@ -15,6 +15,7 @@
 LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, AudioProcessorValueTreeState& s, ChangeBroadcaster& b)
     : AudioProcessorEditor (&p), processor (p), state (s), broadcaster (b)
 {
+	b.addChangeListener(this);
 	largeFont.setExtraKerningFactor(0.5);
 	largeFont.setHeight(35);
 	mediumFont.setExtraKerningFactor(0.25);
@@ -26,6 +27,13 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	quantiseButton.setColour(ToggleButton::ColourIds::tickDisabledColourId, textColour.darker());
 	quantiseButton.setButtonText("Quantise");
 	addAndMakeVisible(&quantiseButton);
+
+	nodeTimingBox.addItem("1/4", 1);
+	nodeTimingBox.addItem("1/2", 2);
+	nodeTimingBox.addItem("1 bar", 3);
+	nodeTimingBox.addItem("2 bars", 4);
+	nodeTimingBox.setSelectedItemIndex(2, true);
+	addAndMakeVisible(&nodeTimingBox);
 
 	setSize(800, 500);
 	
@@ -41,16 +49,20 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 
 LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 {
+	broadcaster.removeChangeListener(this);
 }
 
 void LapseAudioProcessorEditor::setUpAttachments()
 {
-	timeModeAttachment.reset(new AudioProcessorValueTreeState::ButtonAttachment(state, "timeMode", quantiseButton));
+	timeModeAttachment.reset(new AudioProcessorValueTreeState::ButtonAttachment(state, "quantiseDelayTime", quantiseButton));
+	nodeTimingBoxAttachment.reset(new AudioProcessorValueTreeState::ComboBoxAttachment(state, "timerValue", nodeTimingBox));
+
 }
 
 void LapseAudioProcessorEditor::resized()
 {
 	quantiseButton.setBounds(proportionOfWidth(0.75), proportionOfHeight(0.8), 120, 50);
+	nodeTimingBox.setBounds(proportionOfWidth(0.10), proportionOfHeight(0.8), 100, 30);
 }
 
 //==============================================================================
@@ -109,10 +121,11 @@ void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
 	float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
 	for (int xPos = timeNodeField.getX(); xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
 	{
-		g.setColour(textColour);
+		g.setColour(textColour.withAlpha(0.6f));
 		g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
 	}
 }
+
 void LapseAudioProcessorEditor::drawBorderOnSelectedNode(Graphics& g, Node selectedNode)
 {
 	g.setColour(Colours::black);
@@ -150,6 +163,7 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 		{
 			panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[panNodes.size()]));
 			timeNodes.push_back(Node(timeNodeField.getX() + (numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[timeNodes.size()]));
+			selectedNode = &panNodes.back();
 			repaint();
 		}
 	}
@@ -161,11 +175,12 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 		{
 			timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[timeNodes.size()]));
 			panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[panNodes.size()]));
+			selectedNode = &timeNodes.back();
+
 			repaint();
 		}
 	}	
 	numberOfVisibleNodes++;
-	selectNodeForMovement(m);
 }
 //===============================================================================================
 
@@ -174,7 +189,8 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
 {
 	selectNodeForMovement(m);
-	updateNodePosition(m, *selectedNode);
+	if(selectedNode != nullptr)
+		updateNodePosition(m, *selectedNode);
 	repaint();
 }
 
@@ -295,15 +311,15 @@ void LapseAudioProcessorEditor::updateFeedbackParameter()
 
 void LapseAudioProcessorEditor::updateDelayTimeParameter()
 {
-	if (currentDelayNode > 1)
+	/*if (currentDelayNode > 1)
 	{
 		delayTime = jmap(timeNodes[currentDelayNode].getXPosition() - timeNodes[currentDelayNode - 1].getXPosition(),
 						 timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
-	}
-	else
-	{
+	}*/
+	//else
+	//{
 		delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
-	}
+	//}
 
 	processor.parameters.getParameter("delayTime")->beginChangeGesture();
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
@@ -321,8 +337,21 @@ void LapseAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source
 
 void LapseAudioProcessorEditor::changeCurrentDelayNode()
 {
-	if (currentDelayNode < numberOfVisibleNodes)
+	if (panNodes[currentDelayNode].isDelayNode)
+	{
+		panNodes[currentDelayNode].isDelayNode = false;
+		timeNodes[currentDelayNode].isDelayNode = false;
+	}
+	
+	if (currentDelayNode < numberOfVisibleNodes && numberOfVisibleNodes > 1)
+	{
 		currentDelayNode++;
+		if (currentDelayNode == numberOfVisibleNodes)
+		{
+			currentDelayNode = 0;
+		}
+	}
+		
 	else
 		currentDelayNode = 0;
 
