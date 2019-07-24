@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 #include "Node.h"
+#include "LapseLookAndFeel.h"
 #include <vector>
 #include <cmath>
 
@@ -25,9 +26,13 @@ public:
     LapseAudioProcessorEditor (LapseAudioProcessor&, AudioProcessorValueTreeState&, ChangeBroadcaster&);
     ~LapseAudioProcessorEditor();
 
-    //==============================================================================
 	void setUpAttachments();
+
+    //==============================================================================
+	void resized() override;
 	void paint (Graphics&) override;
+
+	void drawStaticUIElements(Graphics&);
 
 	void mouseDoubleClick(const MouseEvent&) override;
 	void mouseDrag(const MouseEvent&) override;
@@ -37,7 +42,6 @@ public:
 	void keepNodeInField(float&, float&, Node selecedNode);
 	void updateFeedbackParameter();
 	void updatePanParameter();
-	//void updateMixParameter();
 	void updateDelayTimeParameter();
 
 	float quantisePosition(float position, float noteLengthInMS);
@@ -47,15 +51,20 @@ public:
 	void drawQuantiseGrid(Graphics&);
 	void drawNodeConnectorLines(Graphics&, int i, std::vector<Node>&);
 	void drawBorderOnSelectedNode(Graphics&, Node node);
-    void resized() override;
 	
 	void changeListenerCallback(ChangeBroadcaster *source) override;
 
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> timeModeAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> nodeTimingBoxAttachment;
 
+	/*
+		Unused functions (May be reintroduced)
+		
+		updateMixParameter();
+	*/
 private:
 	ChangeBroadcaster& broadcaster;
+	
 	Font largeFont = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
 	Font mediumFont = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
 	Font smallFont = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
@@ -65,6 +74,8 @@ private:
 	ToggleButton quantiseButton;
 
 	ComboBox nodeTimingBox;
+
+	LapseLookAndFeel lf;
 
 	Label titleLabel;
 

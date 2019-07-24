@@ -28,6 +28,12 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	quantiseButton.setButtonText("Quantise");
 	addAndMakeVisible(&quantiseButton);
 
+	nodeTimingBox.setLookAndFeel(&lf);
+	nodeTimingBox.setColour(ComboBox::ColourIds::outlineColourId, textColour);
+	nodeTimingBox.setColour(ComboBox::ColourIds::backgroundColourId, Colours::white);
+	nodeTimingBox.setColour(ComboBox::ColourIds::textColourId, textColour);
+	nodeTimingBox.setColour(ComboBox::ColourIds::arrowColourId, textColour);
+
 	nodeTimingBox.addItem("1/4", 1);
 	nodeTimingBox.addItem("1/2", 2);
 	nodeTimingBox.addItem("1 bar", 3);
@@ -47,16 +53,10 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	setUpAttachments();
 }
 
-LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
-{
-	broadcaster.removeChangeListener(this);
-}
-
 void LapseAudioProcessorEditor::setUpAttachments()
 {
 	timeModeAttachment.reset(new AudioProcessorValueTreeState::ButtonAttachment(state, "quantiseDelayTime", quantiseButton));
 	nodeTimingBoxAttachment.reset(new AudioProcessorValueTreeState::ComboBoxAttachment(state, "timerValue", nodeTimingBox));
-
 }
 
 void LapseAudioProcessorEditor::resized()
@@ -68,35 +68,15 @@ void LapseAudioProcessorEditor::resized()
 //==============================================================================
 void LapseAudioProcessorEditor::paint (Graphics& g)
 {
-	//Fills background and draws the static gui elements
     g.fillAll (Colours::white);
-	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), (float)getWidth(),proportionOfHeight(0.333f));
-	Rectangle<float> panFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
-	Rectangle<float> timeFontArea = Rectangle<float>(proportionOfWidth(0.5f), proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
 	
-	g.setColour(textColour);
-    g.setFont (largeFont);
-    g.drawText ("lapse.", titleFontArea, Justification::centred);
-
-	g.setFont(mediumFont);
-	g.drawText("pan", panFontArea, Justification::centred);
-	g.drawText("time", timeFontArea, Justification::centred);
-
-	g.setColour(textColour.darker());
-	g.setFont(smallFont);
-	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("1000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
-
-	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
-
+	drawStaticUIElements(g);
+	
 	if (quantiseButton.getToggleState() == true)
 	{
 		drawQuantiseGrid(g);
 	}
 
-	//Draws nodes and node connector lines
 	for (int i = 0; i < panNodes.size(); i++)
 	{
 		panNodes[i].drawNode(g);
@@ -112,8 +92,30 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 	{
 		drawBorderOnSelectedNode(g, *selectedNode);
 	}
+}
 
+void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
+{
+	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), (float)getWidth(), proportionOfHeight(0.333f));
+	Rectangle<float> panFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
+	Rectangle<float> timeFontArea = Rectangle<float>(proportionOfWidth(0.5f), proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
 
+	g.setColour(textColour);
+	g.setFont(largeFont);
+	g.drawText("lapse.", titleFontArea, Justification::centred);
+
+	g.setFont(mediumFont);
+	g.drawText("pan", panFontArea, Justification::centred);
+	g.drawText("time", timeFontArea, Justification::centred);
+
+	g.setColour(textColour.darker());
+	g.setFont(smallFont);
+	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("1000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
+
+	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
 }
 
 void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
@@ -198,7 +200,7 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 {
 	for (int i = 0; i < numberOfVisibleNodes; i++)
 	{
-		//if mouse-click occurs within the node area, that nodes is used for movement.
+		//if mouse-click occurs within the node area, that node is used for movement.
 
 		if (m.getMouseDownX() < panNodes[i].nodeArea.getRight() && m.getMouseDownX() > panNodes[i].nodeArea.getX() &&
 			m.getMouseDownY() < panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > panNodes[i].nodeArea.getY())
@@ -270,6 +272,7 @@ void LapseAudioProcessorEditor::keepNodeInField(float &newX, float &newY, Node s
 	}
 }
 //================================================================================================
+
 //This quantises the position of a node so that when it is translated to an audio parameter, 
 //it will be synchronised to the DAW.
 
@@ -292,15 +295,6 @@ void LapseAudioProcessorEditor::updatePanParameter()
 	processor.parameters.getParameter("panPosition")->endChangeGesture();
 }
 
-//void LapseAudioProcessorEditor::updateMixParameter()
-//{
-//	//Map pan field Y min/max to mix parameter min/max
-//	mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
-//	processor.parameters.getParameter("mix")->beginChangeGesture();
-//	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
-//	processor.parameters.getParameter("mix")->endChangeGesture();
-//}
-
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
 	feedback = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
@@ -311,16 +305,7 @@ void LapseAudioProcessorEditor::updateFeedbackParameter()
 
 void LapseAudioProcessorEditor::updateDelayTimeParameter()
 {
-	/*if (currentDelayNode > 1)
-	{
-		delayTime = jmap(timeNodes[currentDelayNode].getXPosition() - timeNodes[currentDelayNode - 1].getXPosition(),
-						 timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
-	}*/
-	//else
-	//{
-		delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
-	//}
-
+	delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("delayTime")->beginChangeGesture();
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	processor.parameters.getParameter("delayTime")->endChangeGesture();
@@ -359,5 +344,22 @@ void LapseAudioProcessorEditor::changeCurrentDelayNode()
 	timeNodes[currentDelayNode].isDelayNode = true;
 }
 
+LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
+{
+	broadcaster.removeChangeListener(this);
+	nodeTimingBox.setLookAndFeel(nullptr);
+}
 
+//==========================================================================================
+/* 
+	Unused Functions (May reintroduce in a later version)
 
+	void LapseAudioProcessorEditor::updateMixParameter()
+	{
+		//Map pan field Y min/max to mix parameter min/max
+		mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+		processor.parameters.getParameter("mix")->beginChangeGesture();
+		processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
+		processor.parameters.getParameter("mix")->endChangeGesture();
+	}
+*/

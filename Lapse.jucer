@@ -4,6 +4,12 @@
               pluginFormats="buildStandalone,buildVST,buildVST3" pluginManufacturer="juni"
               pluginManufacturerCode="juni" pluginVST3Category="Delay">
   <MAINGROUP id="CwBbaX" name="Lapse">
+    <GROUP id="{6A2BD0A4-1F3C-01CA-BBA7-329BC468E080}" name="LookAndFeel">
+      <FILE id="iAk5Px" name="LapseLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/LapseLookAndFeel.cpp"/>
+      <FILE id="pdko1E" name="LapseLookAndFeel.h" compile="0" resource="0"
+            file="Source/LapseLookAndFeel.h"/>
+    </GROUP>
     <GROUP id="{53C6CA62-FD74-74D4-3E6B-A1A675C35054}" name="Resources">
       <FILE id="kgwuGz" name="Roboto-Thin.ttf" compile="0" resource="1" file="Resources/Roboto-Thin.ttf"/>
     </GROUP>
