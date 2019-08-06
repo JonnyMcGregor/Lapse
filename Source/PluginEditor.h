@@ -40,7 +40,9 @@ public:
 	void selectNodeForMovement(const MouseEvent&);
 	void updateNodePosition(const MouseEvent &m, Node&);
 	void keepNodeInField(float&, float&, Node selecedNode);
+	
 	void updateFeedbackParameter();
+	void updateMixParameter();
 	void updatePanParameter();
 	void updateDelayTimeParameter();
 
@@ -60,7 +62,7 @@ public:
 	/*
 		Unused functions (May be reintroduced)
 		
-		updateMixParameter();
+		
 	*/
 private:
 	ChangeBroadcaster& broadcaster;
@@ -77,8 +79,6 @@ private:
 
 	LapseLookAndFeel lf;
 
-	Label titleLabel;
-
     LapseAudioProcessor& processor;
 
 	AudioProcessorValueTreeState& state;
@@ -86,6 +86,7 @@ private:
 	Rectangle<float> nodeField;
 	Rectangle<float> panNodeField;
 	Rectangle<float> timeNodeField;
+
 	Colour nodeColour[10]{ Colour::fromRGB(64, 94, 221), 
 						   Colour::fromRGB(72, 181, 15),
 						   Colour::fromRGB(239, 29, 129),

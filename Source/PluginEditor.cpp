@@ -21,7 +21,7 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	mediumFont.setExtraKerningFactor(0.25);
 	mediumFont.setHeight(25);
 	smallFont.setHeight(15);
-	
+
 	quantiseButton.setColour(ToggleButton::ColourIds::textColourId, textColour);
 	quantiseButton.setColour(ToggleButton::ColourIds::tickColourId, textColour);
 	quantiseButton.setColour(ToggleButton::ColourIds::tickDisabledColourId, textColour.darker());
@@ -69,7 +69,6 @@ void LapseAudioProcessorEditor::resized()
 void LapseAudioProcessorEditor::paint (Graphics& g)
 {
     g.fillAll (Colours::white);
-	
 	drawStaticUIElements(g);
 	
 	if (quantiseButton.getToggleState() == true)
@@ -99,6 +98,8 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), (float)getWidth(), proportionOfHeight(0.333f));
 	Rectangle<float> panFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
 	Rectangle<float> timeFontArea = Rectangle<float>(proportionOfWidth(0.5f), proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
+	Rectangle<float> mixFontArea = Rectangle<float>(25.0f, panNodeField.getBottom(), panNodeField.getHeight(), proportionOfHeight(0.0625));
+	Rectangle<float> feedbackFontArea = Rectangle<float>(25, proportionOfWidth(0.5) + 150, timeNodeField.getHeight(), timeNodeField.getX());
 
 	g.setColour(textColour);
 	g.setFont(largeFont);
@@ -107,13 +108,23 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 	g.setFont(mediumFont);
 	g.drawText("pan", panFontArea, Justification::centred);
 	g.drawText("time", timeFontArea, Justification::centred);
-
+	
+	//Transform to draw text vertically
+	g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
+	
+	g.drawText("mix", mixFontArea, Justification::centred);
+	g.drawText("feedback", feedbackFontArea, Justification::centred);
+	
+	//Reset transform...
+	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
+	
 	g.setColour(textColour.darker());
 	g.setFont(smallFont);
 	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("1000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
+
 
 	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
 }
@@ -156,7 +167,6 @@ void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::
 //Nodes are added on mouseDoubleClick()
 void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 {
-	
 	//Prevents panNodes from being created outside of panNodeField
 	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
 		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
@@ -166,6 +176,7 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 			panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[panNodes.size()]));
 			timeNodes.push_back(Node(timeNodeField.getX() + (numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[timeNodes.size()]));
 			selectedNode = &panNodes.back();
+			numberOfVisibleNodes++;
 			repaint();
 		}
 	}
@@ -178,11 +189,10 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 			timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[timeNodes.size()]));
 			panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[panNodes.size()]));
 			selectedNode = &timeNodes.back();
-
+			numberOfVisibleNodes++;
 			repaint();
 		}
 	}	
-	numberOfVisibleNodes++;
 }
 //===============================================================================================
 
@@ -288,16 +298,23 @@ float LapseAudioProcessorEditor::quantisePosition(float position, float noteLeng
 
 void LapseAudioProcessorEditor::updatePanParameter()
 {
-	//Map pan field X min/max to pan parameter min/max
 	pan = jmap(panNodes[currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("panPosition")->beginChangeGesture();
 	processor.parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	processor.parameters.getParameter("panPosition")->endChangeGesture();
 }
 
+void LapseAudioProcessorEditor::updateMixParameter()
+{
+	mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+	processor.parameters.getParameter("mix")->beginChangeGesture();
+	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
+	processor.parameters.getParameter("mix")->endChangeGesture();
+}
+
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
-	feedback = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+	feedback = jmap(panNodes[currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 1.0f);
 	processor.parameters.getParameter("feedback")->beginChangeGesture();
 	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	processor.parameters.getParameter("feedback")->endChangeGesture();
@@ -310,6 +327,8 @@ void LapseAudioProcessorEditor::updateDelayTimeParameter()
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	processor.parameters.getParameter("delayTime")->endChangeGesture();
 }
+
+//==============================================================================
 
 void LapseAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source)
 {
@@ -354,12 +373,5 @@ LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 /* 
 	Unused Functions (May reintroduce in a later version)
 
-	void LapseAudioProcessorEditor::updateMixParameter()
-	{
-		//Map pan field Y min/max to mix parameter min/max
-		mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
-		processor.parameters.getParameter("mix")->beginChangeGesture();
-		processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
-		processor.parameters.getParameter("mix")->endChangeGesture();
-	}
+	
 */
