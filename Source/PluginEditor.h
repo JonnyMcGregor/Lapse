@@ -48,8 +48,6 @@ public:
 
 	float quantisePosition(float position, float noteLengthInMS);
 
-	void changeCurrentDelayNode();
-
 	void drawQuantiseGrid(Graphics&);
 	void drawNodeConnectorLines(Graphics&, int i, std::vector<Node>&);
 	void drawBorderOnSelectedNode(Graphics&, Node node);
@@ -100,8 +98,7 @@ private:
 
 	int maximumNodeSize = 80;
 	int defaultNodeSize = 20;
-	int numberOfVisibleNodes = 0;
-	int currentDelayNode = 0;
+	int *numberOfVisibleNodes = 0;
 	ModifierKeys modKeys;
 
 	float feedback = 0;
@@ -109,8 +106,6 @@ private:
 	float mix = 0;
 	float delayTime = 0;
 
-	std::vector<Node> panNodes;
-	std::vector<Node> timeNodes;
 	Node *selectedNode = nullptr;
 	
 

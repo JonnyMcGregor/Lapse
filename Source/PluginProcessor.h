@@ -12,6 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DelayContainer.h"
+#include "Node.h"
 
 //==============================================================================
 /**
@@ -28,6 +29,9 @@ public:
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 	void timerCallback() override;
+	void changeCurrentDelayNode();
+
+
    #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
@@ -68,7 +72,17 @@ public:
 	float twoBarsInSeconds, oneBarInSeconds, halfNoteInSeconds, quarterNoteInSeconds,
 		eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
 	
+	std::vector<Node> panNodes;
+	std::vector<Node> timeNodes;
 
+	void updateFeedbackParameter();
+	void updateMixParameter();
+	void updatePanParameter();
+	void updateDelayTimeParameter();
+	int currentDelayNode = 0;
+	int numberOfVisibleNodes = 0;
+
+	bool isFirstTimeOpeningEditor = true;
 private:
 
 	DelayContainer delayContainer = DelayContainer(&writePosition);

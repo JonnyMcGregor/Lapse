@@ -55,8 +55,13 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	1,
 																	5,
 																	1
-																  )
-							 
+																  ),
+							 std::make_unique<AudioParameterFloat>("activeNode",
+																	"Active Node",
+																	0,
+																	9,
+																	0
+																  )							 
 						   })
 
 #endif
@@ -282,8 +287,72 @@ void LapseAudioProcessor::timerCallback()
 		startTimer(*timerValues[(int)*timerInterval] * 1000);
 		oldTimerValue = *timerValues[(int)*timerInterval];
 	}
+	changeCurrentDelayNode();
+	
+	updatePanParameter();
+	updateMixParameter();
+	updateFeedbackParameter();
+	updateDelayTimeParameter();
+	
 	firstBeatOfBar.sendChangeMessage();
 }
+
+void LapseAudioProcessor::changeCurrentDelayNode()
+{
+	if (panNodes[currentDelayNode].isDelayNode)
+	{
+		panNodes[currentDelayNode].isDelayNode = false;
+		timeNodes[currentDelayNode].isDelayNode = false;
+	}
+
+	if (currentDelayNode < numberOfVisibleNodes && numberOfVisibleNodes > 1)
+	{
+		currentDelayNode++;
+		if (currentDelayNode == numberOfVisibleNodes)
+		{
+			currentDelayNode = 0;
+		}
+	}
+
+	else
+		currentDelayNode = 0;
+
+	panNodes[currentDelayNode].isDelayNode = true;
+	timeNodes[currentDelayNode].isDelayNode = true;
+}
+
+void LapseAudioProcessor::updatePanParameter()
+{
+	*panParameter = jmap(panNodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
+	parameters.getParameter("panPosition")->beginChangeGesture();
+	parameters.getParameter("panPosition")->setValueNotifyingHost(*panParameter);
+	parameters.getParameter("panPosition")->endChangeGesture();
+}
+
+void LapseAudioProcessor::updateMixParameter()
+{
+	*mixParameter = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
+	parameters.getParameter("mix")->beginChangeGesture();
+	parameters.getParameter("mix")->setValueNotifyingHost(*mixParameter);
+	parameters.getParameter("mix")->endChangeGesture();
+}
+
+void LapseAudioProcessor::updateFeedbackParameter()
+{
+	*feedbackParameter = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
+	parameters.getParameter("feedback")->beginChangeGesture();
+	parameters.getParameter("feedback")->setValueNotifyingHost(*feedbackParameter);
+	parameters.getParameter("feedback")->endChangeGesture();
+}
+
+void LapseAudioProcessor::updateDelayTimeParameter()
+{
+	*delayParameter = jmap(timeNodes[currentDelayNode].getXPosition(), 415.0f, 770.0f, 0.0f, 1.0f);
+	parameters.getParameter("delayTime")->beginChangeGesture();
+	parameters.getParameter("delayTime")->setValueNotifyingHost(*delayParameter);
+	parameters.getParameter("delayTime")->endChangeGesture();
+}
+
 //==============================================================================
 bool LapseAudioProcessor::hasEditor() const
 {

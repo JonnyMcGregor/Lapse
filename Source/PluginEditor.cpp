@@ -42,15 +42,21 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	addAndMakeVisible(&nodeTimingBox);
 
 	setSize(800, 500);
-	
-	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
-	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 
-	panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
-	timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
-	numberOfVisibleNodes++;
+	numberOfVisibleNodes = &processor.numberOfVisibleNodes;
+	if (processor.isFirstTimeOpeningEditor)
+	{
+		panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+		timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+
+		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
+		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
+		*numberOfVisibleNodes++;
+	}
 	
 	setUpAttachments();
+
+	processor.isFirstTimeOpeningEditor = false;
 }
 
 void LapseAudioProcessorEditor::setUpAttachments()
@@ -76,14 +82,14 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 		drawQuantiseGrid(g);
 	}
 
-	for (int i = 0; i < panNodes.size(); i++)
+	for (int i = 0; i < processor.panNodes.size(); i++)
 	{
-		panNodes[i].drawNode(g);
-		timeNodes[i].drawNode(g);
+		processor.panNodes[i].drawNode(g);
+		processor.timeNodes[i].drawNode(g);
 		if (i >= 1)
 		{
-			drawNodeConnectorLines(g, i, panNodes);
-			drawNodeConnectorLines(g, i, timeNodes);
+			drawNodeConnectorLines(g, i, processor.panNodes);
+			drawNodeConnectorLines(g, i, processor.timeNodes);
 		}
 	}
 
@@ -171,12 +177,12 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
 		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
 	{
-		if (numberOfVisibleNodes < 10)
+		if (*numberOfVisibleNodes < 10)
 		{
-			panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[panNodes.size()]));
-			timeNodes.push_back(Node(timeNodeField.getX() + (numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[timeNodes.size()]));
-			selectedNode = &panNodes.back();
-			numberOfVisibleNodes++;
+			processor.panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.panNodes.size()]));
+			processor.timeNodes.push_back(Node(timeNodeField.getX() + (*numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()]));
+			selectedNode = &processor.panNodes.back();
+			*numberOfVisibleNodes++;
 			repaint();
 		}
 	}
@@ -184,12 +190,12 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	else if (m.getMouseDownX() < timeNodeField.getRight() && m.getMouseDownX() > timeNodeField.getX() &&
 			 m.getMouseDownY() < timeNodeField.getBottom() && m.getMouseDownY() > timeNodeField.getY())
 	{
-		if (numberOfVisibleNodes < 10)
+		if (*numberOfVisibleNodes < 10)
 		{
-			timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[timeNodes.size()]));
-			panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[panNodes.size()]));
-			selectedNode = &timeNodes.back();
-			numberOfVisibleNodes++;
+			processor.timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.timeNodes.size()]));
+			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (*numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()]));
+			selectedNode = &processor.timeNodes.back();
+			*numberOfVisibleNodes++;
 			repaint();
 		}
 	}	
@@ -208,22 +214,22 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
 
 void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 {
-	for (int i = 0; i < numberOfVisibleNodes; i++)
+	for (int i = 0; i < *numberOfVisibleNodes; i++)
 	{
 		//if mouse-click occurs within the node area, that node is used for movement.
 
-		if (m.getMouseDownX() < panNodes[i].nodeArea.getRight() && m.getMouseDownX() > panNodes[i].nodeArea.getX() &&
-			m.getMouseDownY() < panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > panNodes[i].nodeArea.getY())
+		if (m.getMouseDownX() < processor.panNodes[i].nodeArea.getRight() && m.getMouseDownX() > processor.panNodes[i].nodeArea.getX() &&
+			m.getMouseDownY() < processor.panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > processor.panNodes[i].nodeArea.getY())
 		{
-			selectedNode = &panNodes[i];
+			selectedNode = &processor.panNodes[i];
 			selectedNode->isPanNode = true;
 			selectedNode->isTimeNode = false;
 		}
 
-		if (m.getMouseDownX() < timeNodes[i].nodeArea.getRight() && m.getMouseDownX() > timeNodes[i].nodeArea.getX() &&
-			m.getMouseDownY() < timeNodes[i].nodeArea.getBottom() && m.getMouseDownY() > timeNodes[i].nodeArea.getY())
+		if (m.getMouseDownX() < processor.timeNodes[i].nodeArea.getRight() && m.getMouseDownX() > processor.timeNodes[i].nodeArea.getX() &&
+			m.getMouseDownY() < processor.timeNodes[i].nodeArea.getBottom() && m.getMouseDownY() > processor.timeNodes[i].nodeArea.getY())
 		{
-			selectedNode = &timeNodes[i];
+			selectedNode = &processor.timeNodes[i];
 			selectedNode->isTimeNode = true;
 			selectedNode->isPanNode = false;
 		}
@@ -244,7 +250,7 @@ void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& se
 
 		selectedNode.setXPosition(newX);
 		selectedNode.setYPosition(newY);
-		//updateMixParameter();
+		updateMixParameter();
 		updatePanParameter();
 		updateFeedbackParameter();
 		updateDelayTimeParameter();
@@ -298,7 +304,7 @@ float LapseAudioProcessorEditor::quantisePosition(float position, float noteLeng
 
 void LapseAudioProcessorEditor::updatePanParameter()
 {
-	pan = jmap(panNodes[currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f);
+	pan = jmap(processor.panNodes[processor.currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("panPosition")->beginChangeGesture();
 	processor.parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	processor.parameters.getParameter("panPosition")->endChangeGesture();
@@ -306,7 +312,7 @@ void LapseAudioProcessorEditor::updatePanParameter()
 
 void LapseAudioProcessorEditor::updateMixParameter()
 {
-	mix = jmap(panNodes[currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+	mix = jmap(processor.panNodes[processor.currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
 	processor.parameters.getParameter("mix")->beginChangeGesture();
 	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
 	processor.parameters.getParameter("mix")->endChangeGesture();
@@ -314,7 +320,7 @@ void LapseAudioProcessorEditor::updateMixParameter()
 
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
-	feedback = jmap(panNodes[currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 1.0f);
+	feedback = jmap(processor.panNodes[processor.currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 1.0f);
 	processor.parameters.getParameter("feedback")->beginChangeGesture();
 	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	processor.parameters.getParameter("feedback")->endChangeGesture();
@@ -322,7 +328,7 @@ void LapseAudioProcessorEditor::updateFeedbackParameter()
 
 void LapseAudioProcessorEditor::updateDelayTimeParameter()
 {
-	delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
+	delayTime = jmap(processor.timeNodes[processor.currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("delayTime")->beginChangeGesture();
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	processor.parameters.getParameter("delayTime")->endChangeGesture();
@@ -332,35 +338,10 @@ void LapseAudioProcessorEditor::updateDelayTimeParameter()
 
 void LapseAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source)
 {
-	changeCurrentDelayNode();
 	repaint();
 	updatePanParameter();
 	updateFeedbackParameter();
 	updateDelayTimeParameter();
-}
-
-void LapseAudioProcessorEditor::changeCurrentDelayNode()
-{
-	if (panNodes[currentDelayNode].isDelayNode)
-	{
-		panNodes[currentDelayNode].isDelayNode = false;
-		timeNodes[currentDelayNode].isDelayNode = false;
-	}
-	
-	if (currentDelayNode < numberOfVisibleNodes && numberOfVisibleNodes > 1)
-	{
-		currentDelayNode++;
-		if (currentDelayNode == numberOfVisibleNodes)
-		{
-			currentDelayNode = 0;
-		}
-	}
-		
-	else
-		currentDelayNode = 0;
-
-	panNodes[currentDelayNode].isDelayNode = true;
-	timeNodes[currentDelayNode].isDelayNode = true;
 }
 
 LapseAudioProcessorEditor::~LapseAudioProcessorEditor()

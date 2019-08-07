@@ -26,6 +26,7 @@ public:
 	float getRadius();
 	float getXPosition();
 	float getYPosition();
+
 	Colour getColour();
 
 	bool isDelayNode = false;
@@ -40,6 +41,5 @@ private:
 	float diameter = 0;
 	float xPos = 0;
 	float yPos = 0;
-
 	Colour nodeColour;
 };
