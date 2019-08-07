@@ -55,13 +55,7 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	1,
 																	5,
 																	1
-																  ),
-							 std::make_unique<AudioParameterFloat>("activeNode",
-																	"Active Node",
-																	0,
-																	9,
-																	0
-																  )							 
+																  )						 
 						   })
 
 #endif
@@ -209,6 +203,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
 
+	//get bpm and time info from daw
 	playHead = getPlayHead();
 	if (playHead != nullptr)
 	{
@@ -228,6 +223,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	float panValue = *panParameter;
 	bool isReverseEffect = *reverseParameter;
 	
+	//Delay Processing:
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
 		delayContainer.fillDryBuffer(channel, buffer, dryBuffer);
@@ -247,10 +243,9 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		}
 		
 		panAudio(channel, buffer, panValue);
-		
 		oldFeedback = feedback;
     }
-
+	//update writePosition for delay processing
 	writePosition += bufferLength;
 	writePosition %= delayBufferLength;
 }
@@ -282,18 +277,22 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 
 void LapseAudioProcessor::timerCallback()
 {
+	Node *previousNode = &panNodes[currentDelayNode];
 	if (oldTimerValue != *timerValues[(int)*timerInterval])
 	{
 		startTimer(*timerValues[(int)*timerInterval] * 1000);
 		oldTimerValue = *timerValues[(int)*timerInterval];
 	}
+	
 	changeCurrentDelayNode();
 	
-	updatePanParameter();
-	updateMixParameter();
-	updateFeedbackParameter();
-	updateDelayTimeParameter();
-	
+	if (previousNode != &panNodes[currentDelayNode])
+	{
+		updatePanParameter();
+		updateMixParameter();
+		updateFeedbackParameter();
+		updateDelayTimeParameter();
+	}
 	firstBeatOfBar.sendChangeMessage();
 }
 
@@ -323,33 +322,33 @@ void LapseAudioProcessor::changeCurrentDelayNode()
 
 void LapseAudioProcessor::updatePanParameter()
 {
-	*panParameter = jmap(panNodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
+	float pan = jmap(panNodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
 	parameters.getParameter("panPosition")->beginChangeGesture();
-	parameters.getParameter("panPosition")->setValueNotifyingHost(*panParameter);
+	parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	parameters.getParameter("panPosition")->endChangeGesture();
 }
 
 void LapseAudioProcessor::updateMixParameter()
 {
-	*mixParameter = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
+	float mix = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
 	parameters.getParameter("mix")->beginChangeGesture();
-	parameters.getParameter("mix")->setValueNotifyingHost(*mixParameter);
+	parameters.getParameter("mix")->setValueNotifyingHost(mix);
 	parameters.getParameter("mix")->endChangeGesture();
 }
 
 void LapseAudioProcessor::updateFeedbackParameter()
 {
-	*feedbackParameter = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
+	float feedback = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
 	parameters.getParameter("feedback")->beginChangeGesture();
-	parameters.getParameter("feedback")->setValueNotifyingHost(*feedbackParameter);
+	parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	parameters.getParameter("feedback")->endChangeGesture();
 }
 
 void LapseAudioProcessor::updateDelayTimeParameter()
 {
-	*delayParameter = jmap(timeNodes[currentDelayNode].getXPosition(), 415.0f, 770.0f, 0.0f, 1.0f);
+	float delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), 415.0f, 770.0f, 0.0f, 1.0f);
 	parameters.getParameter("delayTime")->beginChangeGesture();
-	parameters.getParameter("delayTime")->setValueNotifyingHost(*delayParameter);
+	parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	parameters.getParameter("delayTime")->endChangeGesture();
 }
 

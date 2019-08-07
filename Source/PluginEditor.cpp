@@ -43,7 +43,7 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 
 	setSize(800, 500);
 
-	numberOfVisibleNodes = &processor.numberOfVisibleNodes;
+	
 	if (processor.isFirstTimeOpeningEditor)
 	{
 		panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
@@ -51,12 +51,11 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 
 		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
 		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
-		*numberOfVisibleNodes++;
+		processor.numberOfVisibleNodes++;
+		processor.isFirstTimeOpeningEditor = false;
 	}
 	
 	setUpAttachments();
-
-	processor.isFirstTimeOpeningEditor = false;
 }
 
 void LapseAudioProcessorEditor::setUpAttachments()
@@ -177,12 +176,12 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
 		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
 	{
-		if (*numberOfVisibleNodes < 10)
+		if (processor.numberOfVisibleNodes < 10)
 		{
 			processor.panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.panNodes.size()]));
-			processor.timeNodes.push_back(Node(timeNodeField.getX() + (*numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()]));
+			processor.timeNodes.push_back(Node(timeNodeField.getX() + (processor.numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()]));
 			selectedNode = &processor.panNodes.back();
-			*numberOfVisibleNodes++;
+			processor.numberOfVisibleNodes++;
 			repaint();
 		}
 	}
@@ -190,14 +189,14 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	else if (m.getMouseDownX() < timeNodeField.getRight() && m.getMouseDownX() > timeNodeField.getX() &&
 			 m.getMouseDownY() < timeNodeField.getBottom() && m.getMouseDownY() > timeNodeField.getY())
 	{
-		if (*numberOfVisibleNodes < 10)
-		{
+		 if (processor.numberOfVisibleNodes < 10)
+		 {
 			processor.timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.timeNodes.size()]));
-			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (*numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()]));
+			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (processor.numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()]));
 			selectedNode = &processor.timeNodes.back();
-			*numberOfVisibleNodes++;
+			processor.numberOfVisibleNodes++;
 			repaint();
-		}
+		 }
 	}	
 }
 //===============================================================================================
@@ -214,7 +213,7 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
 
 void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 {
-	for (int i = 0; i < *numberOfVisibleNodes; i++)
+	for (int i = 0; i < processor.numberOfVisibleNodes; i++)
 	{
 		//if mouse-click occurs within the node area, that node is used for movement.
 
@@ -339,15 +338,13 @@ void LapseAudioProcessorEditor::updateDelayTimeParameter()
 void LapseAudioProcessorEditor::changeListenerCallback(ChangeBroadcaster *source)
 {
 	repaint();
-	updatePanParameter();
-	updateFeedbackParameter();
-	updateDelayTimeParameter();
 }
 
 LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 {
 	broadcaster.removeChangeListener(this);
 	nodeTimingBox.setLookAndFeel(nullptr);
+	selectedNode = nullptr;
 }
 
 //==========================================================================================

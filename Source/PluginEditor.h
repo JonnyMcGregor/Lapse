@@ -98,14 +98,13 @@ private:
 
 	int maximumNodeSize = 80;
 	int defaultNodeSize = 20;
-	int *numberOfVisibleNodes = 0;
 	ModifierKeys modKeys;
 
 	float feedback = 0;
 	float pan = 0;
 	float mix = 0;
 	float delayTime = 0;
-
+	float numberOfVisibleNodes = 0;
 	Node *selectedNode = nullptr;
 	
 
