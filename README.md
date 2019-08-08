@@ -2,21 +2,7 @@
 
 ### Overview:
 
-Lapse is a node-based delay plugin designed to visually represent delay in an interactive way. Lapse will allow you to create awesome delays through automating delay time, feedback, and panning parameters through its intuitive user interface.
-
-------------------
-
-### Current State:
-
-In Lapse's current state of development, the following main tasks are yet to be implemented:
-
-	Timer system to change between nodes. This means that only the first node created is currently functional.
-	
-	Mapping of Delay Time to time intervals relative to bpm and time signature of DAW.
-
-	Reverse effect determined by relative position of previous node in time area.
-
-	Saving node parameters after closing GUI in DAW.
+Lapse is a node-based delay plugin designed to visually represent delay in an interactive way. Lapse will allow you to create funky delays through automating delay time, feedback, and panning parameters through its intuitive user interface.
 
 ------------------
 
