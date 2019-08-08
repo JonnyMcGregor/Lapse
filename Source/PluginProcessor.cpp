@@ -277,22 +277,27 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 
 void LapseAudioProcessor::timerCallback()
 {
-	Node *previousNode = &panNodes[currentDelayNode];
-	if (oldTimerValue != *timerValues[(int)*timerInterval])
+	if (!isFirstTimeOpeningEditor)
 	{
-		startTimer(*timerValues[(int)*timerInterval] * 1000);
-		oldTimerValue = *timerValues[(int)*timerInterval];
+		Node *previousNode = &panNodes[currentDelayNode];
+
+		if (oldTimerValue != *timerValues[(int)*timerInterval])
+		{
+			startTimer(*timerValues[(int)*timerInterval] * 1000);
+			oldTimerValue = *timerValues[(int)*timerInterval];
+		}
+
+		changeCurrentDelayNode();
+
+		if (previousNode != &panNodes[currentDelayNode])
+		{
+			updatePanParameter();
+			updateMixParameter();
+			updateFeedbackParameter();
+			updateDelayTimeParameter();
+		}
 	}
-	
-	changeCurrentDelayNode();
-	
-	if (previousNode != &panNodes[currentDelayNode])
-	{
-		updatePanParameter();
-		updateMixParameter();
-		updateFeedbackParameter();
-		updateDelayTimeParameter();
-	}
+
 	firstBeatOfBar.sendChangeMessage();
 }
 

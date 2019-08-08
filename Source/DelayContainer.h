@@ -39,6 +39,8 @@ public:
 
 	void mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter);
 
+	void smoothParameterChange();
+
 private:
 
 	int *writePosition;

@@ -43,16 +43,17 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 
 	setSize(800, 500);
 
-	
+	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+
 	if (processor.isFirstTimeOpeningEditor)
 	{
-		panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
-		timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
-
+		
 		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
 		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
 		processor.numberOfVisibleNodes++;
 		processor.isFirstTimeOpeningEditor = false;
+		repaint();
 	}
 	
 	setUpAttachments();
