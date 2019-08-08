@@ -57,11 +57,6 @@ public:
 	std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> timeModeAttachment;
 	std::unique_ptr<AudioProcessorValueTreeState::ComboBoxAttachment> nodeTimingBoxAttachment;
 
-	/*
-		Unused functions (May be reintroduced)
-		
-		
-	*/
 private:
 	ChangeBroadcaster& broadcaster;
 	

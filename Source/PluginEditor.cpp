@@ -347,10 +347,3 @@ LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 	nodeTimingBox.setLookAndFeel(nullptr);
 	selectedNode = nullptr;
 }
-
-//==========================================================================================
-/* 
-	Unused Functions (May reintroduce in a later version)
-
-	
-*/

@@ -31,13 +31,6 @@ void DelayContainer::fillDryBuffer(int channel, AudioBuffer<float> &sourceBuffer
 
 //==============================================================================
 /*
-	In fillReverseBuffer() the data stored within the delayBuffer is copied in reverse
-	into the reverseBuffer. This doesn't create a typical reverse that you would see
-	in most delay plugins, however it sounds pretty cool.
-*/
-
-//==============================================================================
-/*
 	In fillDelayBuffer() the delayBuffer is filled with the raw audio data from the
 	input device.The total size of the delayBuffer must be greater than the maximum
 	delay time in samples as it acts as our memory bank for recalling the delayed audio.
@@ -59,6 +52,13 @@ void DelayContainer::fillDelayBuffer(int channel, AudioBuffer<float> &sourceBuff
 		delayBuffer.copyFrom(channel, 0, sourceBuffer.getWritePointer(channel), sourceBufferSize - bufferRemaining);
 	}
 }
+
+//==============================================================================
+/*
+	In reverseDelayBuffer() the data stored within the delayBuffer is copied in reverse
+	into the reverseBuffer. This doesn't create a typical reverse that you would see
+	in most delay plugins, however it sounds pretty cool.
+*/
 
 void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverseBuffer, AudioBuffer<float> &delayBuffer)
 {
@@ -83,7 +83,7 @@ void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverse
 }
 //==============================================================================
 /*
-	getFromDelayBuffer() calculates a readPosition based on the delayTime parameter set
+	intitialDelyEffect() calculates a readPosition based on the delayTime parameter set
 	by the user and the current writePosition to identify where in the delay buffer to
 	begin copying from. The data stored within the delayBuffer is then copied back into
 	the main buffer which creates a single delay.
@@ -113,7 +113,7 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 /*
 	feedbackDelay() provides the decaying repetitions of our delayed audio by copying the
 	audio with a single delay stored in the main buffer back into the delayBuffer with a
-	reduced gain value. This value is determined by the feedback parameter knob on the UI.
+	reduced gain value. This value is determined by the feedback parameter on the UI.
 */
 void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float oldFeedback, float feedback)
 {
@@ -125,6 +125,7 @@ void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer
 	else
 	{
 		const int bufferRemaining = delayBufferSize - *writePosition;
+
 		//calculate the gain based on the feedback knob and writeposition within the buffer
 		const float midGain = oldFeedback + ((feedback - oldFeedback / sourceBufferSize) * (bufferRemaining / sourceBufferSize));
 
@@ -133,11 +134,9 @@ void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer
 	}
 }
 
-/*
-	mixBuffers() creates a dry/wet mix of the dryBuffer and sourceBuffer using a mixParameter value
 
-	@mixParameter max value should be 2.0f
-*/
+//mixBuffers() creates a dry/wet mix of the dryBuffer and sourceBuffer using a mixParameter value
+
 void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter)
 {
 	for (int sample = 0; sample < sourceBufferSize; sample++)

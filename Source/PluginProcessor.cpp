@@ -43,10 +43,6 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	0,
 																	1,
 																	0.5),
-							 std::make_unique<AudioParameterBool>("isReversing",
-																  "Is Reversing",
-																  false,
-																  "isReversing"),
 							 std::make_unique<AudioParameterBool>("quantiseDelayTime",
 																  "Quantise Delay Time",
 																  false),
@@ -63,7 +59,6 @@ LapseAudioProcessor::LapseAudioProcessor()
 	mixParameter = parameters.getRawParameterValue("mix");
 	delayParameter = parameters.getRawParameterValue("delayTime");
 	feedbackParameter = parameters.getRawParameterValue("feedback");
-	reverseParameter = parameters.getRawParameterValue("isReversing");
 	panParameter = parameters.getRawParameterValue("panPosition");
 	timeModeParameter = parameters.getRawParameterValue("quantiseDelayTime");
 	timerInterval = parameters.getRawParameterValue("timerValue");
@@ -138,9 +133,8 @@ void LapseAudioProcessor::changeProgramName (int index, const String& newName)
 //==============================================================================
 void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
 	const int numberInputChannels = getTotalNumInputChannels();
+	
 	const int delayBufferSize = 2.0f * (sampleRate + samplesPerBlock);
 
 	delayBuffer.setSize(numberInputChannels, delayBufferSize);
@@ -203,7 +197,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
 
-	//get bpm and time info from daw
+	//Get bpm and time info from daw:
 	playHead = getPlayHead();
 	if (playHead != nullptr)
 	{
@@ -214,33 +208,23 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		calculateNoteLengths();
 	}
 	
-
+	//Set up parameters:
 	const int bufferLength = buffer.getNumSamples();
 	const int delayBufferLength = delayBuffer.getNumSamples();
 
 	float delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
 	float panValue = *panParameter;
-	bool isReverseEffect = *reverseParameter;
 	
 	//Delay Processing:
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
 		delayContainer.fillDryBuffer(channel, buffer, dryBuffer);
 		delayContainer.fillDelayBuffer(channel, buffer, delayBuffer);
-		if (isReverseEffect)
-		{
-			delayContainer.reverseDelayBuffer(channel, reverseBuffer, delayBuffer);
-			delayContainer.initialDelayEffect(channel, buffer, reverseBuffer, delayTime);
-			delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
-			delayContainer.feedbackDelay(channel, buffer, reverseBuffer, oldFeedback, feedback);
-		}
-		else
-		{
-			delayContainer.initialDelayEffect(channel, buffer, delayBuffer, delayTime);
-			delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
-			delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
-		}
+		
+		delayContainer.initialDelayEffect(channel, buffer, delayBuffer, delayTime);
+		delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
+		delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
 		
 		panAudio(channel, buffer, panValue);
 		oldFeedback = feedback;
@@ -388,3 +372,25 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new LapseAudioProcessor();
 }
+
+//==============================================================================
+
+//Unused Code (May be implemented later):
+/*	
+	//Put in Parameters initialisation list
+	std::make_unique<AudioParameterBool>("isReversing", "Is Reversing", false, "isReversing"),
+
+	//Put in constructor
+	reverseParameter = parameters.getRawParameterValue("isReversing");
+
+	//Put in processBlock()	
+	bool isReverseEffect = *reverseParameter;
+
+	if (isReverseEffect)
+		{
+			delayContainer.reverseDelayBuffer(channel, reverseBuffer, delayBuffer);
+			delayContainer.initialDelayEffect(channel, buffer, reverseBuffer, delayTime);
+			delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
+			delayContainer.feedbackDelay(channel, buffer, reverseBuffer, oldFeedback, feedback);
+		}
+*/

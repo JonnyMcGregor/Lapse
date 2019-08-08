@@ -93,7 +93,6 @@ private:
 	float* mixParameter = 0;
 	float* delayParameter = 0;
 	float* feedbackParameter = 0;
-	float* reverseParameter = 0;
 	float* panParameter = 0;
 	float* timeModeParameter = 0;
 	float* timerInterval = 0;
@@ -114,3 +113,7 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessor)
 };
+
+//==================================================================================
+//Unused Code (May reintroduce in a later version):
+	//float* reverseParameter = 0;
