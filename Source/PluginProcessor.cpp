@@ -133,6 +133,8 @@ void LapseAudioProcessor::changeProgramName (int index, const String& newName)
 //==============================================================================
 void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+	lastSampleRate = sampleRate;
+
 	const int numberInputChannels = getTotalNumInputChannels();
 	
 	const int delayBufferSize = 2.0f * (sampleRate + samplesPerBlock);
@@ -250,6 +252,10 @@ void LapseAudioProcessor::calculateNoteLengths()
 
 void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue)
 {
+	if (oldPan != panValue)
+	{
+		panValue = smoothParameterChange(panValue, oldPan);
+	}
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
 		if (channel == 0)
@@ -257,6 +263,16 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 		else
 			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * sin(panValue*pi/2));
 	}
+	oldPan = panValue;
+}
+
+float LapseAudioProcessor::smoothParameterChange(float& currentValue, float& previousValue)
+{
+	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
+	int b = 1.0f - a;
+
+	currentValue = (previousValue * b) + (currentValue * a);
+	return currentValue;
 }
 
 void LapseAudioProcessor::timerCallback()

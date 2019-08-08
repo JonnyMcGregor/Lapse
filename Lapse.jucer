@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="MbR6GV" name="Lapse" projectType="audioplug" jucerVersion="5.4.3"
-              pluginFormats="buildStandalone,buildVST,buildVST3" pluginManufacturer="juni"
+              pluginFormats="buildStandalone,buildVST,buildVST3" pluginManufacturer="J. McGregor"
               pluginManufacturerCode="juni" pluginVST3Category="Delay">
   <MAINGROUP id="CwBbaX" name="Lapse">
     <GROUP id="{6A2BD0A4-1F3C-01CA-BBA7-329BC468E080}" name="LookAndFeel">

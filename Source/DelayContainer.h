@@ -39,7 +39,9 @@ public:
 
 	void mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter);
 
-	void smoothParameterChange();
+	void smoothParameterChangeFloat(float& currentValue, float& previousValue);
+
+	void smoothParameterChangeInt(int& currentValue, int& previousValue);
 
 private:
 
@@ -48,4 +50,7 @@ private:
 
 	int sourceBufferSize;
 	int delayBufferSize;
+
+	int previousDelayTimeSamples = 0;
+	float previousMixValue = 0;
 };

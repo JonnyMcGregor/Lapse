@@ -39,6 +39,7 @@ public:
     void processBlock (AudioBuffer<float>&, MidiBuffer&) override;
 	void calculateNoteLengths();
 	void panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue);
+	float smoothParameterChange(float& currentValue, float& previousValue);
     //==============================================================================
     AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override;
@@ -87,6 +88,8 @@ public:
 
 private:
 
+	int lastSampleRate = 0;
+
 	DelayContainer delayContainer = DelayContainer(&writePosition);
 	AudioBuffer<float> delayBuffer, dryBuffer, reverseBuffer;
 
@@ -103,6 +106,7 @@ private:
 	int writePosition = 0;
 
 	float oldFeedback = 0;
+	float oldPan = 0;
 
 	const double pi = 3.141592654;
 

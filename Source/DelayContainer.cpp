@@ -91,10 +91,13 @@ void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverse
 void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float delayTime)
 {
 	int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
-
 	//The readPosition is where in the delay buffer to start reading from when copying into the main buffer.
 	const int readPosition = static_cast<int> (delayBufferSize + (*writePosition - delayTimeSamples)) % delayBufferSize;
 
+	if (previousDelayTimeSamples != delayTimeSamples)
+	{
+		smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
+	}
 	
 	if (delayBuffer.getNumSamples() > sourceBuffer.getNumSamples() + readPosition)
 	{
@@ -107,8 +110,10 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 		sourceBuffer.copyFrom(channel, 0, delayBuffer.getWritePointer(channel) + readPosition, bufferRemaining);
 		sourceBuffer.copyFrom(channel, bufferRemaining, delayBuffer.getWritePointer(channel), sourceBufferSize - bufferRemaining);
 	}
-	
+
+	previousDelayTimeSamples = delayTimeSamples;
 }
+
 //==============================================================================
 /*
 	feedbackDelay() provides the decaying repetitions of our delayed audio by copying the
@@ -134,15 +139,37 @@ void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer
 	}
 }
 
-
 //mixBuffers() creates a dry/wet mix of the dryBuffer and sourceBuffer using a mixParameter value
-
 void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter)
 {
+	if (previousMixValue != mixParameter)
+	{
+		smoothParameterChangeFloat(mixParameter, previousMixValue);
+	}
+
 	for (int sample = 0; sample < sourceBufferSize; sample++)
 	{									 /*-------------------------- DRY_MIX -------------------------------- + ------------------------ WET_MIX ----------------------*/
 		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (1 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * mixParameter)));
 	}
+
+	previousMixValue = mixParameter;
 }
+
+void DelayContainer::smoothParameterChangeFloat(float& currentValue, float& previousValue)
+{
+	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
+	int b = 1.0f - a;
+
+	currentValue = (previousValue * b) + (currentValue * a);
+}
+
+void DelayContainer::smoothParameterChangeInt(int& currentValue, int& previousValue)
+{
+	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
+	int b = 1.0f - a;
+
+	currentValue = (previousValue * b) + (currentValue * a);
+}
+
 
 
