@@ -96,7 +96,7 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 
 	if (previousDelayTimeSamples != delayTimeSamples)
 	{
-		smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
+		//smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
 	}
 	
 	if (delayBuffer.getNumSamples() > sourceBuffer.getNumSamples() + readPosition)
@@ -144,7 +144,7 @@ void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, A
 {
 	if (previousMixValue != mixParameter)
 	{
-		smoothParameterChangeFloat(mixParameter, previousMixValue);
+		//smoothParameterChangeFloat(mixParameter, previousMixValue);
 	}
 
 	for (int sample = 0; sample < sourceBufferSize; sample++)
@@ -157,18 +157,12 @@ void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, A
 
 void DelayContainer::smoothParameterChangeFloat(float& currentValue, float& previousValue)
 {
-	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
-	int b = 1.0f - a;
-
-	currentValue = (previousValue * b) + (currentValue * a);
+	currentValue = previousValue + ((currentValue - previousValue) * 0.01);
 }
 
 void DelayContainer::smoothParameterChangeInt(int& currentValue, int& previousValue)
 {
-	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
-	int b = 1.0f - a;
-
-	currentValue = (previousValue * b) + (currentValue * a);
+	currentValue = previousValue + ((currentValue - previousValue) * 0.01);
 }
 
 

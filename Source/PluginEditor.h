@@ -20,7 +20,7 @@
 //==============================================================================
 /**
 */
-class LapseAudioProcessorEditor  : public AudioProcessorEditor, public ChangeListener
+class LapseAudioProcessorEditor  : public AudioProcessorEditor, public ChangeListener, public KeyListener
 {
 public:
     LapseAudioProcessorEditor (LapseAudioProcessor&, AudioProcessorValueTreeState&, ChangeBroadcaster&);
@@ -36,7 +36,8 @@ public:
 
 	void mouseDoubleClick(const MouseEvent&) override;
 	void mouseDrag(const MouseEvent&) override;
-	
+	bool keyPressed(const KeyPress &key, Component* originatingComponent) override;
+
 	void selectNodeForMovement(const MouseEvent&);
 	void updateNodePosition(const MouseEvent &m, Node&);
 	void keepNodeInField(float&, float&, Node selecedNode);
@@ -99,7 +100,6 @@ private:
 	float pan = 0;
 	float mix = 0;
 	float delayTime = 0;
-	float numberOfVisibleNodes = 0;
 	Node *selectedNode = nullptr;
 	
 

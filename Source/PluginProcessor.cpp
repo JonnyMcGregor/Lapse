@@ -229,6 +229,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
 		
 		panAudio(channel, buffer, panValue);
+		
 		oldFeedback = feedback;
     }
 	//update writePosition for delay processing
@@ -254,7 +255,7 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 {
 	if (oldPan != panValue)
 	{
-		panValue = smoothParameterChange(panValue, oldPan);
+		//panValue = smoothParameterChange(panValue, oldPan);
 	}
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
@@ -268,16 +269,13 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 
 float LapseAudioProcessor::smoothParameterChange(float& currentValue, float& previousValue)
 {
-	int a = exp(-MathConstants<float>::twoPi / (100 * 0.001f * lastSampleRate));
-	int b = 1.0f - a;
-
-	currentValue = (previousValue * b) + (currentValue * a);
+	currentValue = previousValue + ((currentValue - previousValue) * 0.01);
 	return currentValue;
 }
 
 void LapseAudioProcessor::timerCallback()
 {
-	if (!isFirstTimeOpeningEditor)
+	if (!isFirstTimeOpeningEditor && &panNodes[currentDelayNode] != nullptr)
 	{
 		Node *previousNode = &panNodes[currentDelayNode];
 

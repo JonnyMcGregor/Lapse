@@ -43,6 +43,9 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 
 	setSize(800, 500);
 
+	addKeyListener(this);
+	setWantsKeyboardFocus(true);
+
 	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 
@@ -201,7 +204,26 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	}	
 }
 //===============================================================================================
+bool LapseAudioProcessorEditor::keyPressed(const KeyPress &key, Component* originatingComponent)
+{
+	if (key == KeyPress::deleteKey)
+	{
+		if (selectedNode != nullptr && processor.numberOfVisibleNodes > 1)
+		{
+			if (&processor.panNodes[processor.currentDelayNode] == selectedNode)
+			{
+				processor.currentDelayNode = 0;
+			}
 
+			processor.panNodes.pop_back();
+			processor.timeNodes.pop_back();
+			selectedNode = nullptr;
+			processor.numberOfVisibleNodes--;
+			repaint();
+		}
+	}
+	return true;
+}
 //Node positions are changed on mouseDrag().
 
 void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
