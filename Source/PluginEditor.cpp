@@ -13,7 +13,7 @@
 
 //==============================================================================
 LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, AudioProcessorValueTreeState& s, ChangeBroadcaster& b)
-    : AudioProcessorEditor (&p), processor (p), state (s), broadcaster (b)
+    : AudioProcessorEditor (&p), broadcaster (b), processor (p), state (s)
 {
 	b.addChangeListener(this);
 	largeFont.setExtraKerningFactor(0.5);
@@ -38,7 +38,7 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	nodeTimingBox.addItem("1/2", 2);
 	nodeTimingBox.addItem("1 bar", 3);
 	nodeTimingBox.addItem("2 bars", 4);
-	nodeTimingBox.setSelectedItemIndex(2, true);
+	nodeTimingBox.setSelectedItemIndex(2);
 	addAndMakeVisible(&nodeTimingBox);
 
 	setSize(800, 500);
@@ -68,6 +68,7 @@ void LapseAudioProcessorEditor::setUpAttachments()
 	nodeTimingBoxAttachment.reset(new AudioProcessorValueTreeState::ComboBoxAttachment(state, "timerValue", nodeTimingBox));
 }
 
+//==============================================================================
 void LapseAudioProcessorEditor::resized()
 {
 	quantiseButton.setBounds(proportionOfWidth(0.75), proportionOfHeight(0.8), 120, 50);
@@ -173,6 +174,36 @@ void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::
 }
 
 //=======================================================================================================
+void LapseAudioProcessorEditor::mouseDown(const MouseEvent &m)
+{
+    selectNodeForMovement(m);
+    repaint();
+}
+
+void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
+{
+    for (int i = 0; i < processor.numberOfVisibleNodes; i++)
+    {
+        //if mouse-click occurs within the node area (+ 10 px for some error space), that node is used for movement.
+        if (m.getMouseDownX() < (processor.panNodes[i].nodeArea.getRight() + 10) && m.getMouseDownX() > (processor.panNodes[i].nodeArea.getX() - 10) &&
+            m.getMouseDownY() < (processor.panNodes[i].nodeArea.getBottom() + 10) && m.getMouseDownY() > (processor.panNodes[i].nodeArea.getY() - 10))
+        {
+            selectedNode = &processor.panNodes[i];
+            selectedNode->isPanNode = true;
+            selectedNode->isTimeNode = false;
+        }
+        
+        if (m.getMouseDownX() < (processor.timeNodes[i].nodeArea.getRight() + 10) && m.getMouseDownX() > (processor.timeNodes[i].nodeArea.getX() - 10) &&
+            m.getMouseDownY() < (processor.timeNodes[i].nodeArea.getBottom() + 10) && m.getMouseDownY() > (processor.timeNodes[i].nodeArea.getY() - 10))
+        {
+            selectedNode = &processor.timeNodes[i];
+            selectedNode->isTimeNode = true;
+            selectedNode->isPanNode = false;
+        }
+    }
+}
+
+//=======================================================================================================
 //Nodes are added on mouseDoubleClick()
 void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 {
@@ -203,6 +234,7 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 		 }
 	}	
 }
+
 //===============================================================================================
 bool LapseAudioProcessorEditor::keyPressed(const KeyPress &key, Component* originatingComponent)
 {
@@ -224,38 +256,18 @@ bool LapseAudioProcessorEditor::keyPressed(const KeyPress &key, Component* origi
 	}
 	return true;
 }
-//Node positions are changed on mouseDrag().
 
+//==============================================================================
+//Node positions are changed on mouseDrag().
 void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
 {
-	selectNodeForMovement(m);
-	if(selectedNode != nullptr)
-		updateNodePosition(m, *selectedNode);
-	repaint();
-}
-
-void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
-{
-	for (int i = 0; i < processor.numberOfVisibleNodes; i++)
-	{
-		//if mouse-click occurs within the node area, that node is used for movement.
-
-		if (m.getMouseDownX() < processor.panNodes[i].nodeArea.getRight() && m.getMouseDownX() > processor.panNodes[i].nodeArea.getX() &&
-			m.getMouseDownY() < processor.panNodes[i].nodeArea.getBottom() && m.getMouseDownY() > processor.panNodes[i].nodeArea.getY())
-		{
-			selectedNode = &processor.panNodes[i];
-			selectedNode->isPanNode = true;
-			selectedNode->isTimeNode = false;
-		}
-
-		if (m.getMouseDownX() < processor.timeNodes[i].nodeArea.getRight() && m.getMouseDownX() > processor.timeNodes[i].nodeArea.getX() &&
-			m.getMouseDownY() < processor.timeNodes[i].nodeArea.getBottom() && m.getMouseDownY() > processor.timeNodes[i].nodeArea.getY())
-		{
-			selectedNode = &processor.timeNodes[i];
-			selectedNode->isTimeNode = true;
-			selectedNode->isPanNode = false;
-		}
-	}
+    if(m.mouseWasDraggedSinceMouseDown())
+    {
+        selectNodeForMovement(m);
+        if(selectedNode != nullptr)
+            updateNodePosition(m, *selectedNode);
+        repaint();
+    }
 }
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)

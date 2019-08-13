@@ -33,7 +33,8 @@ public:
 	void paint (Graphics&) override;
 
 	void drawStaticUIElements(Graphics&);
-
+    
+    void mouseDown(const MouseEvent&) override;
 	void mouseDoubleClick(const MouseEvent&) override;
 	void mouseDrag(const MouseEvent&) override;
 	bool keyPressed(const KeyPress &key, Component* originatingComponent) override;
