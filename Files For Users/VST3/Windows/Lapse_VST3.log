@@ -1,0 +1,5 @@
+﻿  include_juce_audio_plugin_client_VST3.cpp
+     Creating library D:\Users\Jonny\Documents\University\MCE\Semester 1\Major Project\Research Projects\Lapse\Builds\VisualStudio2017\x64\Release\VST3\Lapse.lib and object D:\Users\Jonny\Documents\University\MCE\Semester 1\Major Project\Research Projects\Lapse\Builds\VisualStudio2017\x64\Release\VST3\Lapse.exp
+  Generating code
+  Finished generating code
+  Lapse_VST3.vcxproj -> D:\Users\Jonny\Documents\University\MCE\Semester 1\Major Project\Research Projects\Lapse\Builds\VisualStudio2017\x64\Release\VST3\Lapse.vst3

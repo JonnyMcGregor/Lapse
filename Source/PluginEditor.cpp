@@ -37,7 +37,6 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	nodeTimingBox.addItem("1/4", 1);
 	nodeTimingBox.addItem("1/2", 2);
 	nodeTimingBox.addItem("1 bar", 3);
-	nodeTimingBox.addItem("2 bars", 4);
 	nodeTimingBox.setSelectedItemIndex(2);
 	addAndMakeVisible(&nodeTimingBox);
 

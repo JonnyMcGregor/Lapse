@@ -49,7 +49,7 @@ LapseAudioProcessor::LapseAudioProcessor()
 							 std::make_unique<AudioParameterFloat>("timerValue",
 																	"Node Change Time",
 																	1,
-																	5,
+																	3,
 																	1
 																  )						 
 						   })
@@ -157,8 +157,8 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 		timeSigNumerator = playposinfo.timeSigNumerator;
 		currentBeat = playposinfo.ppqPosition;
 		calculateNoteLengths();
+        startTimer(halfNoteInSeconds*1000);
 	}
-	startTimer(halfNoteInSeconds*1000);
 }
 
 void LapseAudioProcessor::releaseResources()
@@ -193,12 +193,32 @@ bool LapseAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) co
 
 void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+    
     ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
-
+    
+    //Some hosts are inconsistent with there calling of prepareToPlay(), therefore we must
+    //check that the delayContainer is properly initialised, and if not, initialise it. This
+    //should only happen either on the first call of processBlock, or if the buffer size changes.
+    
+    if(dryBuffer.getNumSamples() != buffer.getNumSamples())
+    {
+        const int delayBufferSize = 2.0f * (getSampleRate() + buffer.getNumSamples());
+        
+        delayBuffer.setSize(totalNumInputChannels, delayBufferSize);
+        dryBuffer.setSize(totalNumInputChannels, buffer.getNumSamples());
+        reverseBuffer.setSize(totalNumInputChannels, delayBufferSize);
+        
+        delayBuffer.clear();
+        dryBuffer.clear();
+        reverseBuffer.clear();
+        
+        delayContainer.initialise(getSampleRate(), buffer.getNumSamples(), delayBufferSize);
+    }
+    
 	//Get bpm and time info from daw:
 	playHead = getPlayHead();
 	if (playHead != nullptr)
@@ -208,6 +228,10 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		timeSigNumerator = playposinfo.timeSigNumerator;
 		currentBeat = playposinfo.ppqPosition;
 		calculateNoteLengths();
+        if(!isTimerRunning())
+        {
+            startTimer(halfNoteInSeconds*1000);
+        }
 	}
 	
 	//Set up parameters:
@@ -372,12 +396,20 @@ void LapseAudioProcessor::getStateInformation (MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    auto state = parameters.copyState();
+    std::unique_ptr<XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
 }
 
 void LapseAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName (parameters.state.getType()))
+            parameters.replaceState (ValueTree::fromXml (*xmlState));
 }
 
 //==============================================================================
