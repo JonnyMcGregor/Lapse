@@ -124,8 +124,8 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
 	
     g.setFont(smallFont);
-//    g.drawText("double-click to create a node", panNodeField.getX(), panNodeField.getY(), panNodeField.getWidth(), 25.0f, Justification::centredTop);
-//    g.drawText("right-click to delete a node", panNodeField.getX(), panNodeField.getY() + 25.0f, panNodeField.getWidth(), 45.0f, Justification::centredTop);
+    g.drawText("double-click to create a node", panNodeField.getX(), panNodeField.getY(), panNodeField.getWidth(), 25.0f, Justification::centredTop);
+   g.drawText("right-click to delete a node", timeNodeField.getX(), timeNodeField.getY(), timeNodeField.getWidth(), 45.0f, Justification::centredTop);
     
 	g.setColour(textColour.darker());
 	
@@ -140,12 +140,15 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 
 void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
 {
-	float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
-	for (int xPos = timeNodeField.getX(); xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
-	{
-		g.setColour(textColour.withAlpha(0.6f));
-		g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
-	}
+    if(processor.getPlayHead() != 0)
+    {
+        float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
+        for (int xPos = timeNodeField.getX(); xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
+        {
+            g.setColour(textColour.withAlpha(0.6f));
+            g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
+        }
+    }
 }
 
 void LapseAudioProcessorEditor::drawBorderOnSelectedNode(Graphics& g, Node selectedNode)
@@ -185,7 +188,7 @@ void LapseAudioProcessorEditor::mouseDown(const MouseEvent &m)
 
             for(int i = 0; it != processor.panNodes.end(); it++, it2++, i++)
             {
-               if(&processor.panNodes[i] == selectedNode)
+               if(&processor.panNodes[i] == selectedNode || &processor.timeNodes[i] == selectedNode)
                {
                    processor.panNodes.erase(it);
                    processor.timeNodes.erase(it2);
