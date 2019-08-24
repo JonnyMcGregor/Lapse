@@ -16,6 +16,8 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
     : AudioProcessorEditor (&p), broadcaster (b), processor (p), state (s)
 {
 	b.addChangeListener(this);
+    setSize(800, 500);
+    
 	largeFont.setExtraKerningFactor(0.5);
 	largeFont.setHeight(35);
 	mediumFont.setExtraKerningFactor(0.25);
@@ -40,11 +42,6 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	nodeTimingBox.setSelectedItemIndex(2);
 	addAndMakeVisible(&nodeTimingBox);
 
-	setSize(800, 500);
-
-	addKeyListener(this);
-	setWantsKeyboardFocus(true);
-
 	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 
@@ -57,7 +54,6 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 		processor.isFirstTimeOpeningEditor = false;
 		repaint();
 	}
-	
 	setUpAttachments();
 }
 
@@ -127,14 +123,18 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 	//Reset transform...
 	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
 	
+    g.setFont(smallFont);
+//    g.drawText("double-click to create a node", panNodeField.getX(), panNodeField.getY(), panNodeField.getWidth(), 25.0f, Justification::centredTop);
+//    g.drawText("right-click to delete a node", panNodeField.getX(), panNodeField.getY() + 25.0f, panNodeField.getWidth(), 45.0f, Justification::centredTop);
+    
 	g.setColour(textColour.darker());
-	g.setFont(smallFont);
+	
 	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("1000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
-
-
+	g.drawText("2000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
+    
+    
 	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
 }
 
@@ -160,7 +160,6 @@ void LapseAudioProcessorEditor::drawBorderOnSelectedNode(Graphics& g, Node selec
 	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getRight() - selectedNode.gradientArea.getWidth() * 0.125f, selectedNode.gradientArea.getBottom(), 0.5);
 	g.drawLine(selectedNode.gradientArea.getX(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getX(), selectedNode.gradientArea.getBottom() - selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
 	g.drawLine(selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom(), selectedNode.gradientArea.getRight(), selectedNode.gradientArea.getBottom() - selectedNode.gradientArea.getHeight() * 0.125f, 0.5);
-
 }
 
 void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::vector<Node>& nodes)
@@ -177,6 +176,27 @@ void LapseAudioProcessorEditor::mouseDown(const MouseEvent &m)
 {
     selectNodeForMovement(m);
     repaint();
+    if(m.mods.isRightButtonDown())
+    {
+        if (selectedNode != nullptr && processor.numberOfVisibleNodes > 1)
+        {
+            std::vector<Node>::iterator it = processor.panNodes.begin();
+            std::vector<Node>::iterator it2 = processor.timeNodes.begin();
+
+            for(int i = 0; it != processor.panNodes.end(); it++, it2++, i++)
+            {
+               if(&processor.panNodes[i] == selectedNode)
+               {
+                   processor.panNodes.erase(it);
+                   processor.timeNodes.erase(it2);
+                   selectedNode = nullptr;
+                   processor.numberOfVisibleNodes--;
+                   repaint();
+                   break;
+               }
+            }
+        }
+    }
 }
 
 void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
@@ -235,26 +255,7 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 }
 
 //===============================================================================================
-bool LapseAudioProcessorEditor::keyPressed(const KeyPress &key, Component* originatingComponent)
-{
-	if (key == KeyPress::deleteKey)
-	{
-		if (selectedNode != nullptr && processor.numberOfVisibleNodes > 1)
-		{
-			if (&processor.panNodes[processor.currentDelayNode] == selectedNode)
-			{
-				processor.currentDelayNode = 0;
-			}
 
-			processor.panNodes.pop_back();
-			processor.timeNodes.pop_back();
-			selectedNode = nullptr;
-			processor.numberOfVisibleNodes--;
-			repaint();
-		}
-	}
-	return true;
-}
 
 //==============================================================================
 //Node positions are changed on mouseDrag().

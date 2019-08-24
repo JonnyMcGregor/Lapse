@@ -96,7 +96,7 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 
 	if (previousDelayTimeSamples != delayTimeSamples)
 	{
-		//smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
+		smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
 	}
 	
 	if (delayBuffer.getNumSamples() > sourceBuffer.getNumSamples() + readPosition)
@@ -161,8 +161,8 @@ void DelayContainer::smoothParameterChangeFloat(float& currentValue, float& prev
 }
 
 void DelayContainer::smoothParameterChangeInt(int& currentValue, int& previousValue)
-{
-	currentValue = previousValue + ((currentValue - previousValue) * 0.01);
+{                 //a * f(n)        +  b * f(n-1) hopefully lpf/smoothing algorithm?
+	currentValue = 0.5*currentValue + 0.8*previousValue;
 }
 
 

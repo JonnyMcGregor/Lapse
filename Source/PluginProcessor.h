@@ -100,6 +100,9 @@ private:
 	float* timeModeParameter = 0;
 	float* timerInterval = 0;
 
+    LinearSmoothedValue<float> panSmoothed;
+    LinearSmoothedValue<float> delayTimeSmoothed;
+    
 	float *timerValues[4]{ &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds, &twoBarsInSeconds};
 
 	float oldTimerValue = 0;

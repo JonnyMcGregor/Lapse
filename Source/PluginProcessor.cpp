@@ -149,6 +149,7 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
 	delayContainer.initialise(sampleRate, samplesPerBlock, delayBufferSize);
 
+    panSmoothed.reset(sampleRate, 0.001);
 	playHead = getPlayHead();
 	if (playHead != nullptr)
 	{
@@ -238,10 +239,10 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	const int bufferLength = buffer.getNumSamples();
 	const int delayBufferLength = delayBuffer.getNumSamples();
 
-	float delayTime = *delayParameter;
+    float delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
 	float panValue = *panParameter;
-	
+
 	//Delay Processing:
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -253,7 +254,6 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
 		
 		panAudio(channel, buffer, panValue);
-		
 		oldFeedback = feedback;
     }
 	//update writePosition for delay processing
@@ -277,10 +277,7 @@ void LapseAudioProcessor::calculateNoteLengths()
 
 void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue)
 {
-	if (oldPan != panValue)
-	{
-		//panValue = smoothParameterChange(panValue, oldPan);
-	}
+    panValue = panSmoothed.getNextValue();
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
 		if (channel == 0)
@@ -288,7 +285,6 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
 		else
 			audioBuffer.setSample(channel, sample, audioBuffer.getSample(channel, sample) * sin(panValue*pi/2));
 	}
-	oldPan = panValue;
 }
 
 float LapseAudioProcessor::smoothParameterChange(float& currentValue, float& previousValue)
@@ -317,6 +313,8 @@ void LapseAudioProcessor::timerCallback()
 			updateMixParameter();
 			updateFeedbackParameter();
 			updateDelayTimeParameter();
+            panSmoothed.setTargetValue(parameters.getParameter("panPosition")->getValue());
+            delayTimeSmoothed.setTargetValue(*delayParameter);
 		}
 	}
 
