@@ -30,9 +30,11 @@ Lapse is a node-based delay plugin designed to visually represent delay in an in
 
 4. Copy the plugin file (either Lapse.vst, Lapse.vst3, or Lapse.component) into the corresponding plugin directory. This could look like:
 
-Library/Audio/Plug-Ins/VST
-Library/Audio/Plug-Ins/VST3
-Library/Audio/Plug-Ins/Component
+	Library/Audio/Plug-Ins/VST
+	
+	Library/Audio/Plug-Ins/VST3
+	
+	Library/Audio/Plug-Ins/Component
 
 5. Launch Lapse within chosen DAW :)
 
@@ -46,9 +48,12 @@ Library/Audio/Plug-Ins/Component
 
 4. Copy the plugin file (either Lapse.dll or Lapse.vst3) into your plugin directory. This could look like:
 	
-C:/ProgramFiles/VSTPlugins
-C:/ProgramFiles/Steinberg/VSTPlugins
-C:/ProgramFiles(86)/VSTPlugins
-C:/ProgramFiles(86)/Steinberg/VSTPlugins
+	C:/ProgramFiles/VSTPlugins
+	
+	C:/ProgramFiles/Steinberg/VSTPlugins
+	
+	C:/ProgramFiles(86)/VSTPlugins
+	
+	C:/ProgramFiles(86)/Steinberg/VSTPlugins
 
 5. Launch Lapse within chosen DAW :)
