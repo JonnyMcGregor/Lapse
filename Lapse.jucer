@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="MbR6GV" name="Lapse" projectType="audioplug" jucerVersion="5.4.4"
               pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" pluginManufacturer="J. McGregor"
-              pluginManufacturerCode="Juni" pluginVST3Category="Delay">
+              pluginManufacturerCode="JUNI" pluginVST3Category="Delay" pluginCode="LPSE">
   <MAINGROUP id="CwBbaX" name="Lapse">
     <GROUP id="{6A2BD0A4-1F3C-01CA-BBA7-329BC468E080}" name="LookAndFeel">
       <FILE id="iAk5Px" name="LapseLookAndFeel.cpp" compile="1" resource="0"
