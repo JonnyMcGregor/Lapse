@@ -22,16 +22,33 @@ Lapse is a node-based delay plugin designed to visually represent delay in an in
 
 ### To install on MacOSX:
 
-1. Open the XCode project in Builds/MacOSX. 
+1. Navigate to the "Files For Users" folder.
 
-2. Build and run to generate the VST and standalone application, make sure to select the release build in your IDE.
+2. Select the folder with the correct plugin format for your DAW (vst2, vst3, AU)
 
-3. Copy the VST into your plugin folder for your chosen DAW.
+3. Select the MacOSX folder 
 
-4. Launch VST within chosen DAW
+4. Copy the plugin file (either Lapse.vst, Lapse.vst3, or Lapse.component) into the corresponding plugin directory. This could look like:
+
+	Library/Audio/Plug-Ins/VST
+	Library/Audio/Plug-Ins/VST3
+	Library/Audio/Plug-Ins/Component
+
+5. Launch Lapse within chosen DAW :)
 
 ### To install on Windows:
 
-1. Copy either the Lapse.dll (vst2) or Lapse.vst (vst3) from the Builds/Windows folder into the vst folder of your chosen DAW.
+1. Navigate to the "Files For Users" folder.
 
-2. Launch VST within chosen DAW
+2. Select the folder with the correct plugin format for your DAW (vst2, vst3)
+
+3. Select the Windows folder 
+
+4. Copy the plugin file (either Lapse.dll or Lapse.vst3) into your plugin directory. This could look like:
+	
+	C:/ProgramFiles/VSTPlugins
+	C:/ProgramFiles/Steinberg/VSTPlugins
+	C:/ProgramFiles(86)/VSTPlugins
+	c:/ProgramFiles(86)/Steinberg/VSTPlugins
+
+5. Launch Lapse within chosen DAW :)
