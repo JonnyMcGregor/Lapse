@@ -35,26 +35,35 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	nodeTimingBox.setColour(ComboBox::ColourIds::backgroundColourId, Colours::white);
 	nodeTimingBox.setColour(ComboBox::ColourIds::textColourId, textColour);
 	nodeTimingBox.setColour(ComboBox::ColourIds::arrowColourId, textColour);
-
-	nodeTimingBox.addItem("1/4", 1);
-	nodeTimingBox.addItem("1/2", 2);
-	nodeTimingBox.addItem("1 bar", 3);
-	nodeTimingBox.setSelectedItemIndex(2);
+    
+    nodeTimingBox.addItem("1/8 note", 1);
+	nodeTimingBox.addItem("1/4 note", 2);
+	nodeTimingBox.addItem("1/2 note", 3);
+	nodeTimingBox.addItem("1 bar", 4);
+	nodeTimingBox.setSelectedItemIndex(1);
 	addAndMakeVisible(&nodeTimingBox);
 
 	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
 	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+    
+    setUpAttachments();
 
 	if (processor.isFirstTimeOpeningEditor)
 	{
 		
-		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
-		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0]));
+		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0], backgroundColour));
+		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0], backgroundColour));
 		processor.numberOfVisibleNodes++;
-		processor.isFirstTimeOpeningEditor = false;
+        selectedNode = &processor.panNodes.back();
+        
+        updateMixParameter();
+        updatePanParameter();
+        updateFeedbackParameter();
+        updateDelayTimeParameter();
+        
+        processor.isFirstTimeOpeningEditor = false;
 		repaint();
 	}
-	setUpAttachments();
 }
 
 void LapseAudioProcessorEditor::setUpAttachments()
@@ -73,8 +82,7 @@ void LapseAudioProcessorEditor::resized()
 //==============================================================================
 void LapseAudioProcessorEditor::paint (Graphics& g)
 {
-    g.fillAll (Colours::white);
-	drawStaticUIElements(g);
+    g.fillAll (backgroundColour);
 	
 	if (quantiseButton.getToggleState() == true)
 	{
@@ -96,6 +104,9 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 	{
 		drawBorderOnSelectedNode(g, *selectedNode);
 	}
+    
+    drawStaticUIElements(g);
+
 }
 
 void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
@@ -233,10 +244,10 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
 		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
 	{
-		if (processor.numberOfVisibleNodes < 10)
+		if (processor.numberOfVisibleNodes < maximumNumberOfNodes)
 		{
-			processor.panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.panNodes.size()]));
-			processor.timeNodes.push_back(Node(timeNodeField.getX() + (processor.numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()]));
+			processor.panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.panNodes.size()], backgroundColour));
+			processor.timeNodes.push_back(Node(timeNodeField.getX() + (processor.numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()], backgroundColour));
 			selectedNode = &processor.panNodes.back();
 			processor.numberOfVisibleNodes++;
 			repaint();
@@ -246,10 +257,10 @@ void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 	else if (m.getMouseDownX() < timeNodeField.getRight() && m.getMouseDownX() > timeNodeField.getX() &&
 			 m.getMouseDownY() < timeNodeField.getBottom() && m.getMouseDownY() > timeNodeField.getY())
 	{
-		 if (processor.numberOfVisibleNodes < 10)
+		 if (processor.numberOfVisibleNodes < maximumNumberOfNodes)
 		 {
-			processor.timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.timeNodes.size()]));
-			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (processor.numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()]));
+			processor.timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.timeNodes.size()], backgroundColour));
+			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (processor.numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()], backgroundColour));
 			selectedNode = &processor.timeNodes.back();
 			processor.numberOfVisibleNodes++;
 			repaint();

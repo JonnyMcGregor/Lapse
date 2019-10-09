@@ -45,12 +45,12 @@ LapseAudioProcessor::LapseAudioProcessor()
 																	0.5),
 							 std::make_unique<AudioParameterBool>("quantiseDelayTime",
 																  "Quantise Delay Time",
-																  false),
+																  true),
 							 std::make_unique<AudioParameterFloat>("timerValue",
 																	"Node Change Time",
 																	1,
-																	3,
-																	1
+																	4,
+																	3
 																  )						 
 						   })
 
@@ -137,7 +137,7 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
 	const int numberInputChannels = getTotalNumInputChannels();
 	
-	const int delayBufferSize = 2.0f * (sampleRate + samplesPerBlock);
+	const int delayBufferSize = sampleRate * samplesPerBlock;
 
 	delayBuffer.setSize(numberInputChannels, delayBufferSize);
 	dryBuffer.setSize(numberInputChannels, samplesPerBlock);
@@ -148,8 +148,8 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 	reverseBuffer.clear();
 
 	delayContainer.initialise(sampleRate, samplesPerBlock, delayBufferSize);
-
     panSmoothed.reset(sampleRate, 0.001);
+    
 	playHead = getPlayHead();
 	if (playHead != nullptr)
 	{
@@ -242,7 +242,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
     float delayTime = *delayParameter;
 	float feedback = *feedbackParameter;
 	float panValue = *panParameter;
-
+    
 	//Delay Processing:
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -263,8 +263,6 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 
 void LapseAudioProcessor::calculateNoteLengths()
 {
-	if (playposinfo.timeSigDenominator % 2 == 0)
-	{
 		quarterNoteInSeconds = 60 / bpm;
 		halfNoteInSeconds = quarterNoteInSeconds * 2;
 		oneBarInSeconds = halfNoteInSeconds * 2;
@@ -272,7 +270,6 @@ void LapseAudioProcessor::calculateNoteLengths()
 		eighthNoteInSeconds = quarterNoteInSeconds * 0.5;
 		sixteenthNoteInSeconds = eighthNoteInSeconds * 0.5;
 		thirtySecondNoteInSeconds = sixteenthNoteInSeconds * 0.5;
-	}
 }
 
 void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue)
@@ -295,14 +292,14 @@ float LapseAudioProcessor::smoothParameterChange(float& currentValue, float& pre
 
 void LapseAudioProcessor::timerCallback()
 {
-	if (!isFirstTimeOpeningEditor && &panNodes[currentDelayNode] != nullptr)
+	if (!isFirstTimeOpeningEditor)
 	{
 		Node *previousNode = &panNodes[currentDelayNode];
 
-		if (oldTimerValue != *timerValues[(int)*timerInterval])
+		if (oldTimerValue != *timerValues[(int)*timerInterval - 1])
 		{
-			startTimer(*timerValues[(int)*timerInterval] * 1000);
-			oldTimerValue = *timerValues[(int)*timerInterval];
+			startTimer(*timerValues[(int)*timerInterval - 1] * 1000);
+			oldTimerValue = *timerValues[(int)*timerInterval - 1];
 		}
 
 		changeCurrentDelayNode();
@@ -314,7 +311,6 @@ void LapseAudioProcessor::timerCallback()
 			updateFeedbackParameter();
 			updateDelayTimeParameter();
             panSmoothed.setTargetValue(parameters.getParameter("panPosition")->getValue());
-            delayTimeSmoothed.setTargetValue(*delayParameter);
 		}
 	}
 

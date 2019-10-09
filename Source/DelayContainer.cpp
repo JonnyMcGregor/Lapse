@@ -21,6 +21,12 @@ void DelayContainer::initialise(int sampleRate, int sourceBufferLength, int dela
 	lastSampleRate = sampleRate;
 	sourceBufferSize = sourceBufferLength;
 	delayBufferSize = delayBufferLength;
+    delayTimeSmoothed.reset(sampleRate, 0.0001);
+}
+
+void DelayContainer::setSmoothingRampTime(int rampTimeInSeconds)
+{
+    delayTimeSmoothed.reset(lastSampleRate, rampTimeInSeconds);
 }
 
 //Fill dry buffer with raw audio data, this will then be applied to the mix variable
@@ -41,15 +47,27 @@ void DelayContainer::fillDelayBuffer(int channel, AudioBuffer<float> &sourceBuff
 
 	if (delayBufferSize > sourceBufferSize + *writePosition)
 	{
-		delayBuffer.copyFrom(channel, *writePosition, sourceBuffer.getWritePointer(channel), sourceBufferSize);
+        for(int i = 0; i < sourceBufferSize; i++)
+        {
+            delayBuffer.setSample(channel, *writePosition + i, sourceBuffer.getSample(channel, i));
+        }
+		//delayBuffer.copyFrom(channel, *writePosition, sourceBuffer.getWritePointer(channel), sourceBufferSize);
 	}
 
 	else
 	{
 		const int bufferRemaining = delayBuffer.getNumSamples() - *writePosition;
-
-		delayBuffer.copyFrom(channel, *writePosition, sourceBuffer.getWritePointer(channel), bufferRemaining);
-		delayBuffer.copyFrom(channel, 0, sourceBuffer.getWritePointer(channel), sourceBufferSize - bufferRemaining);
+        
+        for (int i = 0; i < bufferRemaining; i++)
+        {
+            delayBuffer.setSample(channel, *writePosition + i, sourceBuffer.getSample(channel, i));
+        }
+        for(int i = bufferRemaining; i < sourceBufferSize; i++)
+        {
+            delayBuffer.setSample(channel, i, sourceBuffer.getSample(channel, i));
+        }
+//        delayBuffer.copyFrom(channel, *writePosition, sourceBuffer.getWritePointer(channel), bufferRemaining);
+//        delayBuffer.copyFrom(channel, 0, sourceBuffer.getWritePointer(channel), sourceBufferSize - bufferRemaining);
 	}
 }
 
@@ -78,8 +96,6 @@ void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverse
 			reverseBuffer.setSample(channel, delayBufferSize - 1, delayBuffer.getSample(channel, i));
 		}
 	}
-
-		
 }
 //==============================================================================
 /*
@@ -92,26 +108,37 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 {
 	int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
 	//The readPosition is where in the delay buffer to start reading from when copying into the main buffer.
+    if(delayTimeSamples != previousDelayTimeSamples)
+    {
+        previousDelayTimeSamples = delayTimeSamples;
+        delayTimeSmoothed.setTargetValue(delayTimeSamples);
+    }
+    
+    delayTimeSamples = (int)delayTimeSmoothed.getNextValue();
+
 	const int readPosition = static_cast<int> (delayBufferSize + (*writePosition - delayTimeSamples)) % delayBufferSize;
 
-	if (previousDelayTimeSamples != delayTimeSamples)
-	{
-		smoothParameterChangeInt(delayTimeSamples, previousDelayTimeSamples);
-	}
-	
 	if (delayBuffer.getNumSamples() > sourceBuffer.getNumSamples() + readPosition)
 	{
-		sourceBuffer.copyFrom(channel, 0, delayBuffer.getWritePointer(channel) + readPosition, sourceBufferSize);
+        for(int i = 0; i < sourceBufferSize; i++)
+        {
+            sourceBuffer.setSample(channel, i, *(delayBuffer.getWritePointer(channel) + readPosition + i));
+        }
 	}
 
 	else
 	{
 		const int bufferRemaining = delayBuffer.getNumSamples() - readPosition;
-		sourceBuffer.copyFrom(channel, 0, delayBuffer.getWritePointer(channel) + readPosition, bufferRemaining);
-		sourceBuffer.copyFrom(channel, bufferRemaining, delayBuffer.getWritePointer(channel), sourceBufferSize - bufferRemaining);
+        
+        for (int i = 0; i < bufferRemaining; i++)
+        {
+            sourceBuffer.setSample(channel, i, delayBuffer.getSample(channel, readPosition + i));
+        }
+        for(int i = 0; i < sourceBufferSize - bufferRemaining; i++)
+        {
+            sourceBuffer.setSample(channel, bufferRemaining, delayBuffer.getSample(channel, i));
+        }
 	}
-
-	previousDelayTimeSamples = delayTimeSamples;
 }
 
 //==============================================================================
@@ -142,11 +169,6 @@ void DelayContainer::feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer
 //mixBuffers() creates a dry/wet mix of the dryBuffer and sourceBuffer using a mixParameter value
 void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter)
 {
-	if (previousMixValue != mixParameter)
-	{
-		//smoothParameterChangeFloat(mixParameter, previousMixValue);
-	}
-
 	for (int sample = 0; sample < sourceBufferSize; sample++)
 	{									 /*-------------------------- DRY_MIX -------------------------------- + ------------------------ WET_MIX ----------------------*/
 		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (1 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * mixParameter)));
@@ -155,15 +177,9 @@ void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, A
 	previousMixValue = mixParameter;
 }
 
-void DelayContainer::smoothParameterChangeFloat(float& currentValue, float& previousValue)
-{
-	currentValue = previousValue + ((currentValue - previousValue) * 0.01);
-}
 
-void DelayContainer::smoothParameterChangeInt(int& currentValue, int& previousValue)
-{                 //a * f(n)        +  b * f(n-1) hopefully lpf/smoothing algorithm?
-	currentValue = 0.5*currentValue + 0.8*previousValue;
-}
+
+
 
 
 

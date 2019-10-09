@@ -39,10 +39,7 @@ public:
 
 	void mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter);
 
-	void smoothParameterChangeFloat(float& currentValue, float& previousValue);
-
-	void smoothParameterChangeInt(int& currentValue, int& previousValue);
-
+    void setSmoothingRampTime(int rampTimeInSeconds);
 private:
 
 	int *writePosition;
@@ -53,4 +50,8 @@ private:
 
 	int previousDelayTimeSamples = 0;
 	float previousMixValue = 0;
+    
+    int smoothingRampTime = 0;
+   
+    LinearSmoothedValue<float> delayTimeSmoothed;
 };

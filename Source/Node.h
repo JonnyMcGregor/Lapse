@@ -13,7 +13,7 @@
 class Node
 {
 public:
-	Node(float xPosition, float yPosition, float nodeDiameter, Colour nodeColour);
+	Node(float xPosition, float yPosition, float nodeDiameter, Colour colourOfNode, Colour colourOfBackground);
 	~Node();
 	
 	void drawNode(Graphics& g);
@@ -42,4 +42,7 @@ private:
 	float xPos = 0;
 	float yPos = 0;
 	Colour nodeColour;
+    Colour backgroundColour;
 };
+
+

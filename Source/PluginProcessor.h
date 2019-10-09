@@ -89,6 +89,7 @@ public:
 private:
 
 	int lastSampleRate = 0;
+    int writePosition = 0;
 
 	DelayContainer delayContainer = DelayContainer(&writePosition);
 	AudioBuffer<float> delayBuffer, dryBuffer, reverseBuffer;
@@ -101,12 +102,10 @@ private:
 	float* timerInterval = 0;
 
     LinearSmoothedValue<float> panSmoothed;
-    LinearSmoothedValue<float> delayTimeSmoothed;
     
-	float *timerValues[4]{ &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds, &twoBarsInSeconds};
+	float *timerValues[4]{&eighthNoteInSeconds, &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds};
 
 	float oldTimerValue = 0;
-	int writePosition = 0;
 
 	float oldFeedback = 0;
 	float oldPan = 0;

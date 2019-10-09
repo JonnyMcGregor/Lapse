@@ -80,7 +80,9 @@ private:
 	Rectangle<float> nodeField;
 	Rectangle<float> panNodeField;
 	Rectangle<float> timeNodeField;
-
+    
+    Colour backgroundColour = Colour::fromRGB(221, 221, 221);
+    
 	Colour nodeColour[10]{ Colour::fromRGB(64, 94, 221), 
 						   Colour::fromRGB(72, 181, 15),
 						   Colour::fromRGB(239, 29, 129),
@@ -94,6 +96,7 @@ private:
 
 	int maximumNodeSize = 80;
 	int defaultNodeSize = 20;
+    int maximumNumberOfNodes = 5;
 	ModifierKeys modKeys;
 
 	float feedback = 0;
