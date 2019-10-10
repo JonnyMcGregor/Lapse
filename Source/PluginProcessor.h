@@ -82,6 +82,7 @@ public:
 	void updateDelayTimeParameter();
 	
 	int currentDelayNode = 0;
+    int previousDelayNode = 0;
 	int numberOfVisibleNodes = 0;
 
 	bool isFirstTimeOpeningEditor = true;

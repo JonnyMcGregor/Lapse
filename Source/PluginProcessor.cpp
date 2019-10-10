@@ -248,7 +248,6 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
     {
 		delayContainer.fillDryBuffer(channel, buffer, dryBuffer);
 		delayContainer.fillDelayBuffer(channel, buffer, delayBuffer);
-		
 		delayContainer.initialDelayEffect(channel, buffer, delayBuffer, delayTime);
 		delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
 		delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
@@ -294,17 +293,17 @@ void LapseAudioProcessor::timerCallback()
 {
 	if (!isFirstTimeOpeningEditor)
 	{
-		Node *previousNode = &panNodes[currentDelayNode];
+		previousDelayNode = currentDelayNode;
 
 		if (oldTimerValue != *timerValues[(int)*timerInterval - 1])
 		{
 			startTimer(*timerValues[(int)*timerInterval - 1] * 1000);
 			oldTimerValue = *timerValues[(int)*timerInterval - 1];
 		}
-
+        
 		changeCurrentDelayNode();
-
-		if (previousNode != &panNodes[currentDelayNode])
+        
+		if (previousDelayNode != currentDelayNode)
 		{
 			updatePanParameter();
 			updateMixParameter();
@@ -359,7 +358,7 @@ void LapseAudioProcessor::updateMixParameter()
 
 void LapseAudioProcessor::updateFeedbackParameter()
 {
-	float feedback = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
+	float feedback = jmap(panNodes[currentDelayNode].getDiameter(), 10.0f, 40.0f, 0.0f, 1.0f);
 	parameters.getParameter("feedback")->beginChangeGesture();
 	parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	parameters.getParameter("feedback")->endChangeGesture();

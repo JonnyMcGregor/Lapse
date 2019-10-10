@@ -21,12 +21,6 @@ void DelayContainer::initialise(int sampleRate, int sourceBufferLength, int dela
 	lastSampleRate = sampleRate;
 	sourceBufferSize = sourceBufferLength;
 	delayBufferSize = delayBufferLength;
-    delayTimeSmoothed.reset(sampleRate, 0.0001);
-}
-
-void DelayContainer::setSmoothingRampTime(int rampTimeInSeconds)
-{
-    delayTimeSmoothed.reset(lastSampleRate, rampTimeInSeconds);
 }
 
 //Fill dry buffer with raw audio data, this will then be applied to the mix variable
@@ -78,28 +72,17 @@ void DelayContainer::fillDelayBuffer(int channel, AudioBuffer<float> &sourceBuff
 	in most delay plugins, however it sounds pretty cool.
 */
 
-void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &reverseBuffer, AudioBuffer<float> &delayBuffer)
+void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float delayTime)
 {
-	if (delayBufferSize > sourceBufferSize + *writePosition)
-	{
-		for (int i = *writePosition; i < *writePosition + sourceBufferSize; i++)
-		{
-			reverseBuffer.setSample(channel, delayBuffer.getNumSamples() - 1 - i, delayBuffer.getSample(channel, i));
-		}
-	}
-	else
-	{
-		const int bufferRemaining = delayBufferSize - *writePosition;
-		for (int i = 0; i < bufferRemaining; i++)
-		{
-			reverseBuffer.setSample(channel, bufferRemaining - i, delayBuffer.getSample(channel, delayBufferSize - 1 - bufferRemaining + i));
-			reverseBuffer.setSample(channel, delayBufferSize - 1, delayBuffer.getSample(channel, i));
-		}
-	}
+    int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
+    //The readPosition is where in the delay buffer to start reading from when copying into the main buffer.
+    const int readPosition = static_cast<int> (delayBufferSize + (*writePosition - delayTimeSamples)) % delayBufferSize;
+    
+    //delayBuffer.reverse(<#int channel#>, <#int startSample#>, <#int numSamples#>);
 }
 //==============================================================================
 /*
-	intitialDelyEffect() calculates a readPosition based on the delayTime parameter set
+	intitialDelayEffect() calculates a readPosition based on the delayTime parameter set
 	by the user and the current writePosition to identify where in the delay buffer to
 	begin copying from. The data stored within the delayBuffer is then copied back into
 	the main buffer which creates a single delay.
@@ -108,14 +91,6 @@ void DelayContainer::initialDelayEffect(int channel, AudioBuffer<float> &sourceB
 {
 	int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
 	//The readPosition is where in the delay buffer to start reading from when copying into the main buffer.
-    if(delayTimeSamples != previousDelayTimeSamples)
-    {
-        previousDelayTimeSamples = delayTimeSamples;
-        delayTimeSmoothed.setTargetValue(delayTimeSamples);
-    }
-    
-    delayTimeSamples = (int)delayTimeSmoothed.getNextValue();
-
 	const int readPosition = static_cast<int> (delayBufferSize + (*writePosition - delayTimeSamples)) % delayBufferSize;
 
 	if (delayBuffer.getNumSamples() > sourceBuffer.getNumSamples() + readPosition)

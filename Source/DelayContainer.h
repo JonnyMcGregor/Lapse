@@ -35,11 +35,10 @@ public:
 
 	void feedbackDelay(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float oldFeedback, float feedback);
 
-	void reverseDelayBuffer(int channel, AudioBuffer<float> &reverseBuffer, AudioBuffer<float> &delayBuffer);
+	void reverseDelayBuffer(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float delayTime);
 
 	void mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &dryBuffer, float mixParameter);
 
-    void setSmoothingRampTime(int rampTimeInSeconds);
 private:
 
 	int *writePosition;
@@ -50,8 +49,4 @@ private:
 
 	int previousDelayTimeSamples = 0;
 	float previousMixValue = 0;
-    
-    int smoothingRampTime = 0;
-   
-    LinearSmoothedValue<float> delayTimeSmoothed;
 };

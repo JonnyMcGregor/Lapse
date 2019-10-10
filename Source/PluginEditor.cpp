@@ -123,28 +123,33 @@ void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 
 	g.setFont(mediumFont);
 	g.drawText("pan", panFontArea, Justification::centred);
-	g.drawText("time", timeFontArea, Justification::centred);
+	g.drawText("delay time", timeFontArea, Justification::centred);
 	
 	//Transform to draw text vertically
 	g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
 	
 	g.drawText("mix", mixFontArea, Justification::centred);
-	g.drawText("feedback", feedbackFontArea, Justification::centred);
+	g.drawText("reverse", feedbackFontArea, Justification::centred);
 	
 	//Reset transform...
 	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
 	
     g.setFont(smallFont);
     g.drawText("double-click to create a node", panNodeField.getX(), panNodeField.getY(), panNodeField.getWidth(), 25.0f, Justification::centredTop);
-   g.drawText("right-click to delete a node", timeNodeField.getX(), timeNodeField.getY(), timeNodeField.getWidth(), 45.0f, Justification::centredTop);
+    g.drawText("right-click to delete a node", panNodeField.getX(), panNodeField.getY() + 25, panNodeField.getWidth(), 45.0f, Justification::centredTop);
+    g.drawText("shift-click & drag to change feedback", panNodeField.getX(), panNodeField.getY() + 50, panNodeField.getWidth(), 45.0f, Justification::centredTop);
     
 	g.setColour(textColour.darker());
 	
 	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
 	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("2000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
     
+    if(!quantiseButton.isEnabled())
+    {
+        g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+        g.drawText("2000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
+    }
+	
     
 	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
 }
@@ -154,10 +159,11 @@ void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
     if(processor.getPlayHead() != 0)
     {
         float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
-        for (int xPos = timeNodeField.getX(); xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
+        for (int xPos = timeNodeField.getX() + distanceBetweenLines; xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
         {
             g.setColour(textColour.withAlpha(0.6f));
             g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
+            
         }
     }
 }
@@ -189,6 +195,11 @@ void LapseAudioProcessorEditor::drawNodeConnectorLines(Graphics& g, int i, std::
 void LapseAudioProcessorEditor::mouseDown(const MouseEvent &m)
 {
     selectNodeForMovement(m);
+    if(selectedNode != nullptr)
+    {
+        previousNodeWidth = selectedNode->getDiameter();
+    }
+    
     repaint();
     if(m.mods.isRightButtonDown())
     {
@@ -279,9 +290,40 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
     {
         selectNodeForMovement(m);
         if(selectedNode != nullptr)
-            updateNodePosition(m, *selectedNode);
+            if(m.mods.isShiftDown())
+            {
+                updateNodeSize(m, *selectedNode);
+                
+            }
+            else
+            {
+                updateNodePosition(m, *selectedNode);
+            }
         repaint();
     }
+}
+void LapseAudioProcessorEditor::updateNodeSize(const MouseEvent &m, Node& selectedNode)
+{
+    float newWidth = 0;
+    
+    if(m.getDistanceFromDragStartX() > 0)
+    {
+        newWidth = m.getDistanceFromDragStart() + previousNodeWidth;
+        if(newWidth > maximumNodeSize)
+        {
+            newWidth = maximumNodeSize;
+        }
+    }
+    else
+    {
+        newWidth = previousNodeWidth - m.getDistanceFromDragStart();
+        if(newWidth < minimumNodeSize)
+        {
+            newWidth = minimumNodeSize;
+        }
+    }
+    selectedNode.setDiameter(newWidth);
+    
 }
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
@@ -368,7 +410,7 @@ void LapseAudioProcessorEditor::updateMixParameter()
 
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
-	feedback = jmap(processor.panNodes[processor.currentDelayNode].getYPosition(), timeNodeField.getBottom(), timeNodeField.getY(), 0.0f, 1.0f);
+	feedback = jmap(processor.panNodes[processor.currentDelayNode].getDiameter(), (float)minimumNodeSize, (float)maximumNodeSize, 0.0f, 1.0f);
 	processor.parameters.getParameter("feedback")->beginChangeGesture();
 	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	processor.parameters.getParameter("feedback")->endChangeGesture();

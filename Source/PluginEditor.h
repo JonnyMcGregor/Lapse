@@ -39,8 +39,9 @@ public:
 	void mouseDrag(const MouseEvent&) override;
 
 	void selectNodeForMovement(const MouseEvent&);
+    void updateNodeSize(const MouseEvent &m, Node&);
 	void updateNodePosition(const MouseEvent &m, Node&);
-	void keepNodeInField(float&, float&, Node selecedNode);
+	void keepNodeInField(float&, float&, Node selectedNode);
 	
 	void updateFeedbackParameter();
 	void updateMixParameter();
@@ -94,7 +95,8 @@ private:
 						   Colour::fromRGB(221, 162, 31),
 						   Colour::fromRGB(239, 20, 20)};
 
-	int maximumNodeSize = 80;
+	int maximumNodeSize = 40;
+    int minimumNodeSize = 10;
 	int defaultNodeSize = 20;
     int maximumNumberOfNodes = 5;
 	ModifierKeys modKeys;
@@ -105,6 +107,6 @@ private:
 	float delayTime = 0;
 	Node *selectedNode = nullptr;
 	
-
+    float previousNodeWidth;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };
