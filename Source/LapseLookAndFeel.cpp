@@ -44,8 +44,37 @@ void LapseLookAndFeel::drawComboBox (Graphics& g, int width, int height, bool,
 
 Font LapseLookAndFeel::getComboBoxFont(ComboBox& box)
 {
-	Font f = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
+    Font f = lapseFont;
 	f.setHeight(jmin(15.0f, box.getHeight() * 0.85f));
 	f.setHorizontalScale(0.9f);
 	return f;
 }
+
+void LapseLookAndFeel::drawToggleButton (Graphics& g, ToggleButton& button,
+                                       bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    
+    auto fontSize = jmin (15.0f, button.getHeight() * 0.75f);
+    lapseFont.setHeight(fontSize);
+    lapseFont.setExtraKerningFactor(0.05);
+    auto tickWidth = fontSize * 1.1f;
+    
+    drawTickBox (g, button, 4.0f, (button.getHeight() - tickWidth) * 0.5f,
+                 tickWidth, tickWidth,
+                 button.getToggleState(),
+                 button.isEnabled(),
+                 shouldDrawButtonAsHighlighted,
+                 shouldDrawButtonAsDown);
+    
+    g.setColour (button.findColour (ToggleButton::textColourId));
+    g.setFont (lapseFont);
+    
+    if (! button.isEnabled())
+        g.setOpacity (0.5f);
+    
+    g.drawFittedText (button.getButtonText(),
+                      button.getLocalBounds().withTrimmedLeft (roundToInt (tickWidth) + 10)
+                      .withTrimmedRight (2),
+                      Justification::centredLeft, 10);
+}
+

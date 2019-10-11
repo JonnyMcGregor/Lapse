@@ -20,5 +20,9 @@ public:
 	void drawComboBox(Graphics&, int width, int height, bool isButtonDown,
 		int buttonX, int buttonY, int buttonW, int buttonH, ComboBox&) override;
 	Font getComboBoxFont(ComboBox& box) override;
-	
+    
+    void drawToggleButton (Graphics&, ToggleButton&,
+                           bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
+private:
+    Font lapseFont = Font(Typeface::createSystemTypefaceFor(BinaryData::RobotoThin_ttf, BinaryData::RobotoThin_ttfSize));
 };

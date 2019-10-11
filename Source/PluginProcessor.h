@@ -73,11 +73,9 @@ public:
 	float twoBarsInSeconds, oneBarInSeconds, halfNoteInSeconds, quarterNoteInSeconds,
 		eighthNoteInSeconds, sixteenthNoteInSeconds, thirtySecondNoteInSeconds;
 	
-	std::vector<Node> panNodes;
-	std::vector<Node> timeNodes;
+	std::vector<Node> nodes;
 
 	void updateFeedbackParameter();
-	void updateMixParameter();
 	void updatePanParameter();
 	void updateDelayTimeParameter();
 	
@@ -95,7 +93,6 @@ private:
 	DelayContainer delayContainer = DelayContainer(&writePosition);
 	AudioBuffer<float> delayBuffer, dryBuffer, reverseBuffer;
 
-	float* mixParameter = 0;
 	float* delayParameter = 0;
 	float* feedbackParameter = 0;
 	float* panParameter = 0;
@@ -104,7 +101,7 @@ private:
 
     LinearSmoothedValue<float> panSmoothed;
     
-	float *timerValues[4]{&eighthNoteInSeconds, &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds};
+	float *timerValues[5]{&eighthNoteInSeconds, &quarterNoteInSeconds,&halfNoteInSeconds, &oneBarInSeconds, &twoBarsInSeconds};
 
 	float oldTimerValue = 0;
 

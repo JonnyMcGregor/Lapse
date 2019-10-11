@@ -67,21 +67,6 @@ void DelayContainer::fillDelayBuffer(int channel, AudioBuffer<float> &sourceBuff
 
 //==============================================================================
 /*
-	In reverseDelayBuffer() the data stored within the delayBuffer is copied in reverse
-	into the reverseBuffer. This doesn't create a typical reverse that you would see
-	in most delay plugins, however it sounds pretty cool.
-*/
-
-void DelayContainer::reverseDelayBuffer(int channel, AudioBuffer<float> &sourceBuffer, AudioBuffer<float> &delayBuffer, float delayTime)
-{
-    int delayTimeSamples = lastSampleRate * delayTime / 1000; //calculate the delayTime in samples
-    //The readPosition is where in the delay buffer to start reading from when copying into the main buffer.
-    const int readPosition = static_cast<int> (delayBufferSize + (*writePosition - delayTimeSamples)) % delayBufferSize;
-    
-    //delayBuffer.reverse(<#int channel#>, <#int startSample#>, <#int numSamples#>);
-}
-//==============================================================================
-/*
 	intitialDelayEffect() calculates a readPosition based on the delayTime parameter set
 	by the user and the current writePosition to identify where in the delay buffer to
 	begin copying from. The data stored within the delayBuffer is then copied back into
@@ -146,10 +131,8 @@ void DelayContainer::mixBuffers(int channel, AudioBuffer<float> &sourceBuffer, A
 {
 	for (int sample = 0; sample < sourceBufferSize; sample++)
 	{									 /*-------------------------- DRY_MIX -------------------------------- + ------------------------ WET_MIX ----------------------*/
-		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (1 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * mixParameter)));
+		sourceBuffer.setSample(channel, sample, ((dryBuffer.getSample(channel, sample) * (0.8 - mixParameter)) + (sourceBuffer.getSample(channel, sample) * (0.2 + mixParameter))));
 	}
-
-	previousMixValue = mixParameter;
 }
 
 

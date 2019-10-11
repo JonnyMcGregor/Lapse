@@ -23,11 +23,7 @@ LapseAudioProcessor::LapseAudioProcessor()
                      #endif
                        ),
 	parameters(*this, nullptr, Identifier("SimpleDelay"),
-						   { std::make_unique<AudioParameterFloat>("mix",             // parameter id
-																   "Mix",             // parameter name
-																   0.0f,              // minimum value
-																   1.0f,              // maximum value
-																   0.5f),             // default value
+						   {             
 							 std::make_unique<AudioParameterFloat>("delayTime",
 																   "Delay Time",
 																   0.0f,
@@ -49,14 +45,13 @@ LapseAudioProcessor::LapseAudioProcessor()
 							 std::make_unique<AudioParameterFloat>("timerValue",
 																	"Node Change Time",
 																	1,
-																	4,
+																	5,
 																	3
 																  )						 
 						   })
 
 #endif
 {
-	mixParameter = parameters.getRawParameterValue("mix");
 	delayParameter = parameters.getRawParameterValue("delayTime");
 	feedbackParameter = parameters.getRawParameterValue("feedback");
 	panParameter = parameters.getRawParameterValue("panPosition");
@@ -249,7 +244,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 		delayContainer.fillDryBuffer(channel, buffer, dryBuffer);
 		delayContainer.fillDelayBuffer(channel, buffer, delayBuffer);
 		delayContainer.initialDelayEffect(channel, buffer, delayBuffer, delayTime);
-		delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
+		delayContainer.mixBuffers(channel, buffer, dryBuffer, 0.5);
 		delayContainer.feedbackDelay(channel, buffer, delayBuffer, oldFeedback, feedback);
 		
 		panAudio(channel, buffer, panValue);
@@ -273,6 +268,9 @@ void LapseAudioProcessor::calculateNoteLengths()
 
 void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, float panValue)
 {
+    if(numberOfVisibleNodes == 1)
+        panSmoothed.setTargetValue(panValue);
+    
     panValue = panSmoothed.getNextValue();
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
@@ -291,7 +289,7 @@ float LapseAudioProcessor::smoothParameterChange(float& currentValue, float& pre
 
 void LapseAudioProcessor::timerCallback()
 {
-	if (!isFirstTimeOpeningEditor)
+	if (!isFirstTimeOpeningEditor && numberOfVisibleNodes > 1)
 	{
 		previousDelayNode = currentDelayNode;
 
@@ -306,11 +304,11 @@ void LapseAudioProcessor::timerCallback()
 		if (previousDelayNode != currentDelayNode)
 		{
 			updatePanParameter();
-			updateMixParameter();
 			updateFeedbackParameter();
 			updateDelayTimeParameter();
             panSmoothed.setTargetValue(parameters.getParameter("panPosition")->getValue());
-		}
+        }
+
 	}
 
 	firstBeatOfBar.sendChangeMessage();
@@ -318,10 +316,9 @@ void LapseAudioProcessor::timerCallback()
 
 void LapseAudioProcessor::changeCurrentDelayNode()
 {
-	if (panNodes[currentDelayNode].isDelayNode)
+	if (nodes[currentDelayNode].isDelayNode)
 	{
-		panNodes[currentDelayNode].isDelayNode = false;
-		timeNodes[currentDelayNode].isDelayNode = false;
+		nodes[currentDelayNode].isDelayNode = false;
 	}
 
 	if (currentDelayNode < numberOfVisibleNodes && numberOfVisibleNodes > 1)
@@ -336,29 +333,20 @@ void LapseAudioProcessor::changeCurrentDelayNode()
 	else
 		currentDelayNode = 0;
 
-	panNodes[currentDelayNode].isDelayNode = true;
-	timeNodes[currentDelayNode].isDelayNode = true;
+	nodes[currentDelayNode].isDelayNode = true;
 }
 
 void LapseAudioProcessor::updatePanParameter()
 {
-	float pan = jmap(panNodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
+	float pan = jmap(nodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
 	parameters.getParameter("panPosition")->beginChangeGesture();
 	parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	parameters.getParameter("panPosition")->endChangeGesture();
 }
 
-void LapseAudioProcessor::updateMixParameter()
-{
-	float mix = jmap(panNodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
-	parameters.getParameter("mix")->beginChangeGesture();
-	parameters.getParameter("mix")->setValueNotifyingHost(mix);
-	parameters.getParameter("mix")->endChangeGesture();
-}
-
 void LapseAudioProcessor::updateFeedbackParameter()
 {
-	float feedback = jmap(panNodes[currentDelayNode].getDiameter(), 10.0f, 40.0f, 0.0f, 1.0f);
+	float feedback = jmap(nodes[currentDelayNode].getDiameter(), 10.0f, 40.0f, 0.0f, 1.0f);
 	parameters.getParameter("feedback")->beginChangeGesture();
 	parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	parameters.getParameter("feedback")->endChangeGesture();
@@ -366,7 +354,7 @@ void LapseAudioProcessor::updateFeedbackParameter()
 
 void LapseAudioProcessor::updateDelayTimeParameter()
 {
-	float delayTime = jmap(timeNodes[currentDelayNode].getXPosition(), 415.0f, 770.0f, 0.0f, 1.0f);
+	float delayTime = jmap(nodes[currentDelayNode].getYPosition(), 333.0f, 45.0f, 0.0f, 1.0f);
 	parameters.getParameter("delayTime")->beginChangeGesture();
 	parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	parameters.getParameter("delayTime")->endChangeGesture();

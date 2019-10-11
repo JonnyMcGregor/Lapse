@@ -16,7 +16,7 @@
 #include "LapseLookAndFeel.h"
 #include <vector>
 #include <cmath>
-
+#include "WelcomeWindow.h"
 //==============================================================================
 /**
 */
@@ -44,7 +44,6 @@ public:
 	void keepNodeInField(float&, float&, Node selectedNode);
 	
 	void updateFeedbackParameter();
-	void updateMixParameter();
 	void updatePanParameter();
 	void updateDelayTimeParameter();
 
@@ -79,8 +78,6 @@ private:
 	AudioProcessorValueTreeState& state;
 
 	Rectangle<float> nodeField;
-	Rectangle<float> panNodeField;
-	Rectangle<float> timeNodeField;
     
     Colour backgroundColour = Colour::fromRGB(221, 221, 221);
     
@@ -98,15 +95,15 @@ private:
 	int maximumNodeSize = 40;
     int minimumNodeSize = 10;
 	int defaultNodeSize = 20;
-    int maximumNumberOfNodes = 5;
+    int maximumNumberOfNodes = 10;
 	ModifierKeys modKeys;
 
 	float feedback = 0;
 	float pan = 0;
-	float mix = 0;
 	float delayTime = 0;
 	Node *selectedNode = nullptr;
 	
     float previousNodeWidth;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LapseAudioProcessorEditor)
 };

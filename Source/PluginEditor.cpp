@@ -24,10 +24,11 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	mediumFont.setHeight(25);
 	smallFont.setHeight(15);
 
+    quantiseButton.setLookAndFeel(&lf);
 	quantiseButton.setColour(ToggleButton::ColourIds::textColourId, textColour);
 	quantiseButton.setColour(ToggleButton::ColourIds::tickColourId, textColour);
 	quantiseButton.setColour(ToggleButton::ColourIds::tickDisabledColourId, textColour.darker());
-	quantiseButton.setButtonText("Quantise");
+	quantiseButton.setButtonText("quantise");
 	addAndMakeVisible(&quantiseButton);
 
 	nodeTimingBox.setLookAndFeel(&lf);
@@ -35,34 +36,32 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 	nodeTimingBox.setColour(ComboBox::ColourIds::backgroundColourId, Colours::white);
 	nodeTimingBox.setColour(ComboBox::ColourIds::textColourId, textColour);
 	nodeTimingBox.setColour(ComboBox::ColourIds::arrowColourId, textColour);
-    
     nodeTimingBox.addItem("1/8 note", 1);
 	nodeTimingBox.addItem("1/4 note", 2);
 	nodeTimingBox.addItem("1/2 note", 3);
 	nodeTimingBox.addItem("1 bar", 4);
+    nodeTimingBox.addItem("2 bars", 5);
 	nodeTimingBox.setSelectedItemIndex(1);
 	addAndMakeVisible(&nodeTimingBox);
 
-	panNodeField = Rectangle<float>(30, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
-	timeNodeField = Rectangle<float>(proportionOfWidth(0.5) + 15, 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
+	nodeField = Rectangle<float>(proportionOfWidth(0.25), 45, proportionOfWidth(0.5f) - 45, proportionOfHeight(0.666f) - 45);
     
     setUpAttachments();
 
 	if (processor.isFirstTimeOpeningEditor)
 	{
 		
-		processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getCentreY(), defaultNodeSize, nodeColour[0], backgroundColour));
-		processor.timeNodes.push_back(Node(timeNodeField.getCentreX(), timeNodeField.getCentreY(), defaultNodeSize, nodeColour[0], backgroundColour));
+		processor.nodes.push_back(Node(nodeField.getCentreX(), nodeField.getCentreY(), defaultNodeSize, nodeColour[0], backgroundColour));
 		processor.numberOfVisibleNodes++;
-        selectedNode = &processor.panNodes.back();
+        selectedNode = &processor.nodes.back();
         
-        updateMixParameter();
+        //updateMixParameter();
         updatePanParameter();
         updateFeedbackParameter();
         updateDelayTimeParameter();
         
+        repaint();
         processor.isFirstTimeOpeningEditor = false;
-		repaint();
 	}
 }
 
@@ -75,8 +74,8 @@ void LapseAudioProcessorEditor::setUpAttachments()
 //==============================================================================
 void LapseAudioProcessorEditor::resized()
 {
-	quantiseButton.setBounds(proportionOfWidth(0.75), proportionOfHeight(0.8), 120, 50);
-	nodeTimingBox.setBounds(proportionOfWidth(0.10), proportionOfHeight(0.8), 100, 30);
+	quantiseButton.setBounds(proportionOfWidth(0.75), proportionOfHeight(0.8), 120, 30);
+	nodeTimingBox.setBounds(proportionOfWidth(0.25) - 120, proportionOfHeight(0.8), 120, 30);
 }
 
 //==============================================================================
@@ -89,16 +88,15 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 		drawQuantiseGrid(g);
 	}
 
-	for (int i = 0; i < processor.panNodes.size(); i++)
+	for (int i = 0; i < processor.nodes.size(); i++)
 	{
-		processor.panNodes[i].drawNode(g);
-		processor.timeNodes[i].drawNode(g);
-		if (i >= 1)
-		{
-			drawNodeConnectorLines(g, i, processor.panNodes);
-			drawNodeConnectorLines(g, i, processor.timeNodes);
-		}
-	}
+		processor.nodes[i].drawNode(g);
+    }
+    for (int i = 1; i < processor.nodes.size(); i++)
+    {
+			drawNodeConnectorLines(g, i, processor.nodes);
+    }
+	
 
 	if (selectedNode != nullptr)
 	{
@@ -106,64 +104,71 @@ void LapseAudioProcessorEditor::paint (Graphics& g)
 	}
     
     drawStaticUIElements(g);
-
 }
 
 void LapseAudioProcessorEditor::drawStaticUIElements(Graphics& g)
 {
 	Rectangle<float> titleFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), (float)getWidth(), proportionOfHeight(0.333f));
-	Rectangle<float> panFontArea = Rectangle<float>(0.0f, proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
-	Rectangle<float> timeFontArea = Rectangle<float>(proportionOfWidth(0.5f), proportionOfHeight(0.666f), proportionOfWidth(0.5), proportionOfHeight(0.0625f));
-	Rectangle<float> mixFontArea = Rectangle<float>(25.0f, panNodeField.getBottom(), panNodeField.getHeight(), proportionOfHeight(0.0625));
-	Rectangle<float> feedbackFontArea = Rectangle<float>(25, proportionOfWidth(0.5) + 150, timeNodeField.getHeight(), timeNodeField.getX());
-
+	Rectangle<float> panFontArea = Rectangle<float>(nodeField.getX(), nodeField.getBottom(), nodeField.getWidth(), proportionOfHeight(0.0625f));
+	Rectangle<float> timeFontArea = Rectangle<float>(nodeField.getX() - 50, nodeField.getBottom(), nodeField.getHeight(), proportionOfHeight(0.0625));
+    
 	g.setColour(textColour);
 	g.setFont(largeFont);
 	g.drawText("lapse.", titleFontArea, Justification::centred);
 
 	g.setFont(mediumFont);
 	g.drawText("pan", panFontArea, Justification::centred);
-	g.drawText("delay time", timeFontArea, Justification::centred);
 	
 	//Transform to draw text vertically
-	g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
+	g.addTransform(AffineTransform::rotation(-MathConstants<float>::halfPi, nodeField.getX() - 50.0f, nodeField.getBottom()));
 	
-	g.drawText("mix", mixFontArea, Justification::centred);
-	g.drawText("reverse", feedbackFontArea, Justification::centred);
+	g.drawText("delay time", timeFontArea, Justification::centred);
 	
 	//Reset transform...
-	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, 25.0f, panNodeField.getBottom()));
+	g.addTransform(AffineTransform::rotation(MathConstants<float>::halfPi, nodeField.getX() - 50.0f, nodeField.getBottom()));
 	
     g.setFont(smallFont);
-    g.drawText("double-click to create a node", panNodeField.getX(), panNodeField.getY(), panNodeField.getWidth(), 25.0f, Justification::centredTop);
-    g.drawText("right-click to delete a node", panNodeField.getX(), panNodeField.getY() + 25, panNodeField.getWidth(), 45.0f, Justification::centredTop);
-    g.drawText("shift-click & drag to change feedback", panNodeField.getX(), panNodeField.getY() + 50, panNodeField.getWidth(), 45.0f, Justification::centredTop);
-    
+
 	g.setColour(textColour.darker());
 	
-	g.drawText("L", 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-	g.drawText("R", proportionOfWidth(0.5) - 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
+	g.drawText("L", panFontArea.getX(), panFontArea.getBottom() - 25, panFontArea.getWidth(), panFontArea.getHeight(), Justification::topLeft);
+    g.drawText("R", panFontArea.getX(), panFontArea.getBottom() - 25, panFontArea.getWidth(), panFontArea.getHeight(), Justification::topRight);
     
-    if(!quantiseButton.isEnabled())
-    {
-        g.drawText("0ms", proportionOfWidth(0.5) + 45.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::topLeft);
-        g.drawText("2000ms", getWidth() - 90.0f, proportionOfHeight(0.6), 45.0f, 45.0f, Justification::centredTop);
-    }
-	
+    g.drawText("0ms", nodeField.getX() - 52, nodeField.getY() + 7, 45.0f, nodeField.getHeight(), Justification::bottomRight);
+    g.drawText("2000ms", nodeField.getX() - 52, nodeField.getY() - 7, 45.0f, nodeField.getHeight(), Justification::topRight);
     
-	g.drawLine(proportionOfWidth(0.5), 45, proportionOfWidth(0.5f), proportionOfHeight(0.666f), 0.5f);
+//    g.drawText("double-click = create a node", proportionOfWidth(0.708), proportionOfHeight(0.25), proportionOfWidth(0.25), 45, Justification::topLeft);
+//    g.drawText("right-click = delete a node", proportionOfWidth(0.708), proportionOfHeight(0.25) + 25, proportionOfWidth(0.25), 45, Justification::topLeft);
+//    g.drawText("shift-click & drag = change feedback", proportionOfWidth(0.708), proportionOfHeight(0.25) + 50, proportionOfWidth(0.25), 45, Justification::topLeft);
 }
 
 void LapseAudioProcessorEditor::drawQuantiseGrid(Graphics& g)
 {
     if(processor.getPlayHead() != 0)
     {
-        float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
-        for (int xPos = timeNodeField.getX() + distanceBetweenLines; xPos <= timeNodeField.getRight(); xPos += distanceBetweenLines)
+        float distanceBetweenLines = jmap(processor.sixteenthNoteInSeconds * 1000, 0.0f, 2000.0f, 0.0f, nodeField.getHeight());
+        int i = 0;
+        for (int yPos = nodeField.getY(); yPos <= nodeField.getBottom(); yPos += distanceBetweenLines, i++)
         {
-            g.setColour(textColour.withAlpha(0.6f));
-            g.drawLine(xPos, timeNodeField.getY(), xPos, timeNodeField.getBottom(), 0.25);
-            
+            if(i % 4 == 0)
+            {
+                g.setColour(textColour);
+                g.drawLine(nodeField.getX(), yPos, nodeField.getRight(), yPos, 0.3);
+            }
+            else if(i % 1 == 0 && i % 2 != 0 && i % 4 != 0)
+            {
+                float dashPattern[2];
+                dashPattern[0] = 8.0;
+                dashPattern[1] = 8.0;
+        
+                g.setColour(textColour.withAlpha(0.6f));
+                g.drawDashedLine(Line<float> (nodeField.getX(), yPos, nodeField.getRight(), yPos), dashPattern, 2, 0.25);
+            }
+            else
+            {
+                g.setColour(textColour.withAlpha(0.6f));
+                g.drawLine(nodeField.getX(), yPos, nodeField.getRight(), yPos, 0.25);
+            }
         }
     }
 }
@@ -205,15 +210,13 @@ void LapseAudioProcessorEditor::mouseDown(const MouseEvent &m)
     {
         if (selectedNode != nullptr && processor.numberOfVisibleNodes > 1)
         {
-            std::vector<Node>::iterator it = processor.panNodes.begin();
-            std::vector<Node>::iterator it2 = processor.timeNodes.begin();
+            std::vector<Node>::iterator it = processor.nodes.begin();
 
-            for(int i = 0; it != processor.panNodes.end(); it++, it2++, i++)
+            for(int i = 0; it != processor.nodes.end(); it++, i++)
             {
-               if(&processor.panNodes[i] == selectedNode || &processor.timeNodes[i] == selectedNode)
+               if(&processor.nodes[i] == selectedNode)
                {
-                   processor.panNodes.erase(it);
-                   processor.timeNodes.erase(it2);
+                   processor.nodes.erase(it);
                    selectedNode = nullptr;
                    processor.numberOfVisibleNodes--;
                    repaint();
@@ -229,20 +232,11 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
     for (int i = 0; i < processor.numberOfVisibleNodes; i++)
     {
         //if mouse-click occurs within the node area (+ 10 px for some error space), that node is used for movement.
-        if (m.getMouseDownX() < (processor.panNodes[i].nodeArea.getRight() + 10) && m.getMouseDownX() > (processor.panNodes[i].nodeArea.getX() - 10) &&
-            m.getMouseDownY() < (processor.panNodes[i].nodeArea.getBottom() + 10) && m.getMouseDownY() > (processor.panNodes[i].nodeArea.getY() - 10))
+        if (m.getMouseDownX() < (processor.nodes[i].nodeArea.getRight() + 10) && m.getMouseDownX() > (processor.nodes[i].nodeArea.getX() - 10) &&
+            m.getMouseDownY() < (processor.nodes[i].nodeArea.getBottom() + 10) && m.getMouseDownY() > (processor.nodes[i].nodeArea.getY() - 10))
         {
-            selectedNode = &processor.panNodes[i];
+            selectedNode = &processor.nodes[i];
             selectedNode->isPanNode = true;
-            selectedNode->isTimeNode = false;
-        }
-        
-        if (m.getMouseDownX() < (processor.timeNodes[i].nodeArea.getRight() + 10) && m.getMouseDownX() > (processor.timeNodes[i].nodeArea.getX() - 10) &&
-            m.getMouseDownY() < (processor.timeNodes[i].nodeArea.getBottom() + 10) && m.getMouseDownY() > (processor.timeNodes[i].nodeArea.getY() - 10))
-        {
-            selectedNode = &processor.timeNodes[i];
-            selectedNode->isTimeNode = true;
-            selectedNode->isPanNode = false;
         }
     }
 }
@@ -252,31 +246,17 @@ void LapseAudioProcessorEditor::selectNodeForMovement(const MouseEvent &m)
 void LapseAudioProcessorEditor::mouseDoubleClick(const MouseEvent &m)
 {
 	//Prevents panNodes from being created outside of panNodeField
-	if (m.getMouseDownX() < panNodeField.getRight() && m.getMouseDownX() > panNodeField.getX() &&
-		m.getMouseDownY() < panNodeField.getBottom() && m.getMouseDownY() > panNodeField.getY())
+	if (m.getMouseDownX() < nodeField.getRight() && m.getMouseDownX() > nodeField.getX() &&
+		m.getMouseDownY() < nodeField.getBottom() && m.getMouseDownY() > nodeField.getY())
 	{
 		if (processor.numberOfVisibleNodes < maximumNumberOfNodes)
 		{
-			processor.panNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.panNodes.size()], backgroundColour));
-			processor.timeNodes.push_back(Node(timeNodeField.getX() + (processor.numberOfVisibleNodes * 30.0f), timeNodeField.getY() + 30, defaultNodeSize, nodeColour[processor.timeNodes.size()], backgroundColour));
-			selectedNode = &processor.panNodes.back();
+			processor.nodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.nodes.size()], backgroundColour));
+			selectedNode = &processor.nodes.back();
 			processor.numberOfVisibleNodes++;
 			repaint();
 		}
 	}
-	//Prevents timeNodes from being created outside of timeNodeField
-	else if (m.getMouseDownX() < timeNodeField.getRight() && m.getMouseDownX() > timeNodeField.getX() &&
-			 m.getMouseDownY() < timeNodeField.getBottom() && m.getMouseDownY() > timeNodeField.getY())
-	{
-		 if (processor.numberOfVisibleNodes < maximumNumberOfNodes)
-		 {
-			processor.timeNodes.push_back(Node(m.getMouseDownX(), m.getMouseDownY(), defaultNodeSize, nodeColour[processor.timeNodes.size()], backgroundColour));
-			processor.panNodes.push_back(Node(panNodeField.getCentreX(), panNodeField.getY() + (processor.numberOfVisibleNodes * 30.0f), defaultNodeSize, nodeColour[processor.panNodes.size()], backgroundColour));
-			selectedNode = &processor.timeNodes.back();
-			processor.numberOfVisibleNodes++;
-			repaint();
-		 }
-	}	
 }
 
 //===============================================================================================
@@ -293,7 +273,6 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
             if(m.mods.isShiftDown())
             {
                 updateNodeSize(m, *selectedNode);
-                
             }
             else
             {
@@ -323,7 +302,7 @@ void LapseAudioProcessorEditor::updateNodeSize(const MouseEvent &m, Node& select
         }
     }
     selectedNode.setDiameter(newWidth);
-    
+    updateFeedbackParameter();
 }
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
@@ -333,16 +312,15 @@ void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& se
 		
 		keepNodeInField(newX, newY, selectedNode);
 
-		if (selectedNode.isTimeNode && quantiseButton.getToggleState() == true)
+		if (quantiseButton.getToggleState() == true)
 		{
-			newX = quantisePosition(newX, (processor.sixteenthNoteInSeconds*1000));
+			newY = quantisePosition(newY, (processor.sixteenthNoteInSeconds*1000));
 		}
 
 		selectedNode.setXPosition(newX);
 		selectedNode.setYPosition(newY);
-		updateMixParameter();
+		//updateMixParameter();
 		updatePanParameter();
-		updateFeedbackParameter();
 		updateDelayTimeParameter();
 }
 
@@ -355,37 +333,24 @@ void LapseAudioProcessorEditor::keepNodeInField(float &newX, float &newY, Node s
 {
 	if (selectedNode.isPanNode)
 	{
-		if (newX > panNodeField.getRight())
-			newX = panNodeField.getRight();
-		if (newX < panNodeField.getX())
-			newX = panNodeField.getX();
-		if (newY > panNodeField.getBottom())
-			newY = panNodeField.getBottom();
-		if (newY < panNodeField.getY())
-			newY = panNodeField.getY();
-
-	}
-	else if (selectedNode.isTimeNode)
-	{
-		if (newX > timeNodeField.getRight())
-			newX = timeNodeField.getRight();
-		if (newX < timeNodeField.getX())
-			newX = timeNodeField.getX();
-		if (newY > timeNodeField.getBottom())
-			newY = timeNodeField.getBottom();
-		if (newY < timeNodeField.getY())
-			newY = timeNodeField.getY();
+		if (newX > nodeField.getRight())
+			newX = nodeField.getRight();
+		if (newX < nodeField.getX())
+			newX = nodeField.getX();
+		if (newY > nodeField.getBottom())
+			newY = nodeField.getBottom();
+		if (newY < nodeField.getY())
+			newY = nodeField.getY();
 	}
 }
 //================================================================================================
 
-//This quantises the position of a node so that when it is translated to an audio parameter, 
-//it will be synchronised to the DAW.
+//This quantises the Y position of a node to increments of note values
 
 float LapseAudioProcessorEditor::quantisePosition(float position, float noteLengthInMS)
 {
-	float noteLengthMappedToXAxis = jmap(noteLengthInMS, 0.0f, 2000.0f, 0.0f, timeNodeField.getWidth());
-	position = (round((position - timeNodeField.getX()) / noteLengthMappedToXAxis) * noteLengthMappedToXAxis) + timeNodeField.getX();
+	float noteLengthMappedToYAxis = jmap(noteLengthInMS, 0.0f, 2000.0f, 0.0f, nodeField.getHeight());
+	position = (round((position - nodeField.getY()) / noteLengthMappedToYAxis) * noteLengthMappedToYAxis) + nodeField.getY();
 	return position;
 }
 //================================================================================================
@@ -394,23 +359,15 @@ float LapseAudioProcessorEditor::quantisePosition(float position, float noteLeng
 
 void LapseAudioProcessorEditor::updatePanParameter()
 {
-	pan = jmap(processor.panNodes[processor.currentDelayNode].getXPosition(), panNodeField.getX(), panNodeField.getRight(), 0.0f, 1.0f);
+	pan = jmap(processor.nodes[processor.currentDelayNode].getXPosition(), nodeField.getX(), nodeField.getRight(), 0.0f, 1.0f);
 	processor.parameters.getParameter("panPosition")->beginChangeGesture();
 	processor.parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	processor.parameters.getParameter("panPosition")->endChangeGesture();
 }
 
-void LapseAudioProcessorEditor::updateMixParameter()
-{
-	mix = jmap(processor.panNodes[processor.currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
-	processor.parameters.getParameter("mix")->beginChangeGesture();
-	processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
-	processor.parameters.getParameter("mix")->endChangeGesture();
-}
-
 void LapseAudioProcessorEditor::updateFeedbackParameter()
 {
-	feedback = jmap(processor.panNodes[processor.currentDelayNode].getDiameter(), (float)minimumNodeSize, (float)maximumNodeSize, 0.0f, 1.0f);
+	feedback = jmap(processor.nodes[processor.currentDelayNode].getDiameter(), (float)minimumNodeSize, (float)maximumNodeSize, 0.0f, 1.0f);
 	processor.parameters.getParameter("feedback")->beginChangeGesture();
 	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
 	processor.parameters.getParameter("feedback")->endChangeGesture();
@@ -418,7 +375,7 @@ void LapseAudioProcessorEditor::updateFeedbackParameter()
 
 void LapseAudioProcessorEditor::updateDelayTimeParameter()
 {
-	delayTime = jmap(processor.timeNodes[processor.currentDelayNode].getXPosition(), timeNodeField.getX(), timeNodeField.getRight(), 0.0f, 1.0f);
+	delayTime = jmap(processor.nodes[processor.currentDelayNode].getYPosition(), nodeField.getBottom(), nodeField.getY(), 0.0f, 1.0f);
 	processor.parameters.getParameter("delayTime")->beginChangeGesture();
 	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
 	processor.parameters.getParameter("delayTime")->endChangeGesture();
@@ -435,5 +392,17 @@ LapseAudioProcessorEditor::~LapseAudioProcessorEditor()
 {
 	broadcaster.removeChangeListener(this);
 	nodeTimingBox.setLookAndFeel(nullptr);
+    quantiseButton.setLookAndFeel(nullptr);
 	selectedNode = nullptr;
 }
+
+
+//=============== Unused Functions ===============\\
+
+//void LapseAudioProcessorEditor::updateMixParameter()
+//{
+//    mix = jmap(processor.panNodes[processor.currentDelayNode].getYPosition(), panNodeField.getBottom(), panNodeField.getY(), 0.0f, 1.0f);
+//    processor.parameters.getParameter("mix")->beginChangeGesture();
+//    processor.parameters.getParameter("mix")->setValueNotifyingHost(mix);
+//    processor.parameters.getParameter("mix")->endChangeGesture();
+//}
