@@ -143,7 +143,7 @@ void LapseAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 	reverseBuffer.clear();
 
 	delayContainer.initialise(sampleRate, samplesPerBlock, delayBufferSize);
-    panSmoothed.reset(sampleRate, 0.001);
+    panSmoothed.reset(sampleRate, 0.0015);
     
 	playHead = getPlayHead();
 	if (playHead != nullptr)
@@ -271,7 +271,7 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
     if(numberOfVisibleNodes == 1)
         panSmoothed.setTargetValue(panValue);
     
-    //panValue = panSmoothed.getNextValue();
+    panValue = panSmoothed.getNextValue();
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
 		if (channel == 0)
