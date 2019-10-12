@@ -271,7 +271,7 @@ void LapseAudioProcessor::panAudio(int channel, AudioBuffer<float> audioBuffer, 
     if(numberOfVisibleNodes == 1)
         panSmoothed.setTargetValue(panValue);
     
-    panValue = panSmoothed.getNextValue();
+    //panValue = panSmoothed.getNextValue();
 	for (int sample = 0; sample < audioBuffer.getNumSamples(); sample++)
 	{
 		if (channel == 0)
@@ -338,7 +338,7 @@ void LapseAudioProcessor::changeCurrentDelayNode()
 
 void LapseAudioProcessor::updatePanParameter()
 {
-	float pan = jmap(nodes[currentDelayNode].getXPosition(), 30.0f, 385.0f, 0.0f, 1.0f);
+	float pan = jmap(nodes[currentDelayNode].getXPosition(), 200.0f, 555.0f, 0.0f, 1.0f);
 	parameters.getParameter("panPosition")->beginChangeGesture();
 	parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
 	parameters.getParameter("panPosition")->endChangeGesture();

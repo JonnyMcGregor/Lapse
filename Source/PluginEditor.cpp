@@ -55,10 +55,9 @@ LapseAudioProcessorEditor::LapseAudioProcessorEditor (LapseAudioProcessor& p, Au
 		processor.numberOfVisibleNodes++;
         selectedNode = &processor.nodes.back();
         
-        //updateMixParameter();
-        updatePanParameter();
-        updateFeedbackParameter();
-        updateDelayTimeParameter();
+        processor.updatePanParameter();
+        processor.updateFeedbackParameter();
+        processor.updateDelayTimeParameter();
         
         repaint();
         processor.isFirstTimeOpeningEditor = false;
@@ -270,6 +269,7 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
     {
         selectNodeForMovement(m);
         if(selectedNode != nullptr)
+        {
             if(m.mods.isShiftDown())
             {
                 updateNodeSize(m, *selectedNode);
@@ -278,6 +278,7 @@ void LapseAudioProcessorEditor::mouseDrag(const MouseEvent &m)
             {
                 updateNodePosition(m, *selectedNode);
             }
+        }
         repaint();
     }
 }
@@ -302,7 +303,7 @@ void LapseAudioProcessorEditor::updateNodeSize(const MouseEvent &m, Node& select
         }
     }
     selectedNode.setDiameter(newWidth);
-    updateFeedbackParameter();
+    processor.updateFeedbackParameter();
 }
 
 void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& selectedNode)
@@ -319,9 +320,8 @@ void LapseAudioProcessorEditor::updateNodePosition(const MouseEvent &m, Node& se
 
 		selectedNode.setXPosition(newX);
 		selectedNode.setYPosition(newY);
-		//updateMixParameter();
-		updatePanParameter();
-		updateDelayTimeParameter();
+		processor.updatePanParameter();
+		processor.updateDelayTimeParameter();
 }
 
 //=========================================================================================
@@ -357,29 +357,7 @@ float LapseAudioProcessorEditor::quantisePosition(float position, float noteLeng
 
 //When updating parameters the values must be scaled between 0 and 1 in order to behave as expected in the plugin host.
 
-void LapseAudioProcessorEditor::updatePanParameter()
-{
-	pan = jmap(processor.nodes[processor.currentDelayNode].getXPosition(), nodeField.getX(), nodeField.getRight(), 0.0f, 1.0f);
-	processor.parameters.getParameter("panPosition")->beginChangeGesture();
-	processor.parameters.getParameter("panPosition")->setValueNotifyingHost(pan);
-	processor.parameters.getParameter("panPosition")->endChangeGesture();
-}
 
-void LapseAudioProcessorEditor::updateFeedbackParameter()
-{
-	feedback = jmap(processor.nodes[processor.currentDelayNode].getDiameter(), (float)minimumNodeSize, (float)maximumNodeSize, 0.0f, 1.0f);
-	processor.parameters.getParameter("feedback")->beginChangeGesture();
-	processor.parameters.getParameter("feedback")->setValueNotifyingHost(feedback);
-	processor.parameters.getParameter("feedback")->endChangeGesture();
-}
-
-void LapseAudioProcessorEditor::updateDelayTimeParameter()
-{
-	delayTime = jmap(processor.nodes[processor.currentDelayNode].getYPosition(), nodeField.getBottom(), nodeField.getY(), 0.0f, 1.0f);
-	processor.parameters.getParameter("delayTime")->beginChangeGesture();
-	processor.parameters.getParameter("delayTime")->setValueNotifyingHost(delayTime);
-	processor.parameters.getParameter("delayTime")->endChangeGesture();
-}
 
 //==============================================================================
 

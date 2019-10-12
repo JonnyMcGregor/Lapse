@@ -16,7 +16,6 @@
 #include "LapseLookAndFeel.h"
 #include <vector>
 #include <cmath>
-#include "WelcomeWindow.h"
 //==============================================================================
 /**
 */
@@ -42,10 +41,6 @@ public:
     void updateNodeSize(const MouseEvent &m, Node&);
 	void updateNodePosition(const MouseEvent &m, Node&);
 	void keepNodeInField(float&, float&, Node selectedNode);
-	
-	void updateFeedbackParameter();
-	void updatePanParameter();
-	void updateDelayTimeParameter();
 
 	float quantisePosition(float position, float noteLengthInMS);
 
