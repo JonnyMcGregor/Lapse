@@ -196,7 +196,7 @@ void LapseAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& 
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
     
-    //Some hosts are inconsistent with there calling of prepareToPlay(), therefore we must
+    //Some hosts are inconsistent with their calling of prepareToPlay(), therefore we must
     //check that the delayContainer is properly initialised, and if not, initialise it. This
     //should only happen either on the first call of processBlock, or if the buffer size changes.
     
@@ -401,23 +401,3 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 //==============================================================================
-
-//Unused Code (May be implemented later):
-/*	
-	//Put in Parameters initialisation list
-	std::make_unique<AudioParameterBool>("isReversing", "Is Reversing", false, "isReversing"),
-
-	//Put in constructor
-	reverseParameter = parameters.getRawParameterValue("isReversing");
-
-	//Put in processBlock()	
-	bool isReverseEffect = *reverseParameter;
-
-	if (isReverseEffect)
-		{
-			delayContainer.reverseDelayBuffer(channel, reverseBuffer, delayBuffer);
-			delayContainer.initialDelayEffect(channel, buffer, reverseBuffer, delayTime);
-			delayContainer.mixBuffers(channel, buffer, dryBuffer, *mixParameter);
-			delayContainer.feedbackDelay(channel, buffer, reverseBuffer, oldFeedback, feedback);
-		}
-*/
